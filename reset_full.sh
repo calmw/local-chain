@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# 重置 full 节点：停止相关容器并清空链数据（保留 config-src）
+# 重置 full 节点：停止相关容器并清空链数据（保留 config）
 #
 # 默认:
 #   DATA_DIR  = <repo>/node_full/app/node

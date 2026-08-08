@@ -87,7 +87,7 @@ MetaMask：Chain ID `100000`，RPC `http://<PUBLIC_HOST>:8575`，符号可按需
 local-chain/
 ├── README.md / docs/项目架构.md
 ├── .env.example / docker-compose.yaml
-├── start.sh / stop.sh
+├── start.sh / stop.sh / reset.sh   # 启停；全量清库并重启
 ├── reset_archive.sh / reset_full.sh / reset_validator.sh
 ├── scripts/reset_lib.sh
 ├── rpc_test/rpc_test_testnet.sh
@@ -117,7 +117,13 @@ local-chain/
 ## 常用运维
 
 ```bash
-# 清库（默认清仓库内 node_*/app/...；-y 跳过确认；-n dry-run）
+# 全量重置：down 节点+浏览器 → 删节点 app/node 与 Blockscout 数据 → start.sh
+./reset.sh -y
+./reset.sh -y --wipe-keys   # 连验证者密钥一起清
+./reset.sh -y --no-start    # 只清库不重启
+./reset.sh -n               # dry-run
+
+# 按角色清库（默认清仓库内 node_*/app/...；-y 跳过确认；-n dry-run）
 ./reset_archive.sh -y
 ./reset_full.sh -y
 ./reset_validator.sh -y              # 保留密钥

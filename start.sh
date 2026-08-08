@@ -98,18 +98,54 @@ wait_rpc() {
   done
 }
 
+# 固定内网 IP（与 docker-compose / .env 一致）；变更子网时需重建 local-chain_net
+IP_VALIDATOR_1="${IP_VALIDATOR_1:-172.28.0.11}"
+IP_VALIDATOR_2="${IP_VALIDATOR_2:-172.28.0.12}"
+IP_FULL="${IP_FULL:-172.28.0.13}"
+IP_ARCHIVE="${IP_ARCHIVE:-172.28.0.14}"
+CHAIN_SUBNET="${CHAIN_SUBNET:-172.28.0.0/24}"
+
+ensure_chain_net() {
+  local net="local-chain_net" current=""
+  if ! docker network inspect "${net}" >/dev/null 2>&1; then
+    return 0
+  fi
+  current="$(docker network inspect -f '{{(index .IPAM.Config 0).Subnet}}' "${net}" 2>/dev/null | tr -d '\r\n' || true)"
+  if [[ -n "${current}" && "${current}" != "${CHAIN_SUBNET}" ]]; then
+    log "网络 ${net} 子网 ${current} ≠ ${CHAIN_SUBNET}，重建网络 ..."
+    compose_chain down --remove-orphans || true
+    # Blockscout 等外部容器可能仍挂在旧网上
+    local cid
+    for cid in $(docker ps -aq --filter network="${net}" 2>/dev/null); do
+      docker network disconnect -f "${net}" "${cid}" 2>/dev/null || true
+    done
+    docker network rm "${net}" 2>/dev/null || true
+  fi
+}
+
 resolve_bootnodes() {
   local nodekey="${ROOT_DIR}/node_validator_1/app/keys/nodekey"
-  local pubkey=""
+  local pubkey="" ip="${IP_VALIDATOR_1}"
 
   wait_for_file "${nodekey}" 180
+
+  # 优先用 compose 固定 IP；校验容器实际地址是否一致
+  local actual
+  actual="$(docker inspect -f '{{(index .NetworkSettings.Networks "local-chain_net").IPAddress}}' validator_1 2>/dev/null | tr -d '\r\n' || true)"
+  if [[ -n "${actual}" && "${actual}" != "${ip}" ]]; then
+    log "警告: validator_1 实际 IP=${actual}，与配置 IP_VALIDATOR_1=${ip} 不一致，改用实际 IP"
+    ip="${actual}"
+  fi
+  if [[ -z "${ip}" ]]; then
+    echo "ERROR: 未配置 IP_VALIDATOR_1 且无法从容器读取 IP" >&2
+    return 1
+  fi
 
   if docker exec validator_1 test -x /data/chain/bin/bootnode 2>/dev/null; then
     pubkey="$(docker exec validator_1 /data/chain/bin/bootnode -nodekey /data/app/keys/nodekey -writeaddress 2>/dev/null | tr -d '\r\n' || true)"
   fi
 
   if [[ -z "${pubkey}" && -f "${ROOT_DIR}/node_validator_1/app/keys/enode.txt" ]]; then
-    # enode://<pubkey>@host:port
     pubkey="$(sed -n 's|^enode://\([0-9a-fA-F]*\)@.*|\1|p' "${ROOT_DIR}/node_validator_1/app/keys/enode.txt" | head -n1)"
   fi
 
@@ -118,13 +154,13 @@ resolve_bootnodes() {
     return 1
   fi
 
-  BOOTNODES="enode://${pubkey}@validator_1:30303"
+  # 仅连接本集群 validator_1（固定内网 IP），不写外部 bootnode
+  BOOTNODES="enode://${pubkey}@${ip}:30303"
   export BOOTNODES
   log "BOOTNODES=${BOOTNODES}"
+  log "内网: v1=${IP_VALIDATOR_1} v2=${IP_VALIDATOR_2} full=${IP_FULL} archive=${IP_ARCHIVE}"
 
-  # 写回 .env 中的 BOOTNODES= 行，便于下次与 docker compose 直接使用
   if grep -q '^BOOTNODES=' "${ROOT_DIR}/.env"; then
-    # shellcheck disable=SC2094
     local tmp
     tmp="$(mktemp)"
     awk -v v="${BOOTNODES}" 'BEGIN{done=0} /^BOOTNODES=/{print "BOOTNODES=" v; done=1; next} {print} END{if(!done) print "BOOTNODES=" v}' \
@@ -141,6 +177,8 @@ start_nodes() {
     "${ROOT_DIR}/node_validator_2/app/node" "${ROOT_DIR}/node_validator_2/app/keys" \
     "${ROOT_DIR}/node_full/app/node" \
     "${ROOT_DIR}/node_archive/app/node"
+
+  ensure_chain_net
 
   log "启动 validator_1 ..."
   compose_chain up -d validator_1

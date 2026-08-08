@@ -1,11 +1,22 @@
 # local-chain: 2 validators + full + archive
-# 网络: local-chain_net（供 Blockscout 直连 archive_node）
-# 端口默认绑定 0.0.0.0，便于局域网 / Tailscale 访问
+# 网络: local-chain_net（固定内网 IP，供 P2P / Blockscout）
+# 各节点挂载各自 node_*/app → /data/app
+#
+# 内网地址规划（默认）:
+#   172.28.0.11  validator_1  (bootnode)
+#   172.28.0.12  validator_2
+#   172.28.0.13  full_node
+#   172.28.0.14  archive_node
 name: local-chain
 
 networks:
   chain_net:
     name: local-chain_net
+    driver: bridge
+    ipam:
+      config:
+        - subnet: ${CHAIN_SUBNET:-172.28.0.0/24}
+          gateway: ${CHAIN_GATEWAY:-172.28.0.1}
 
 services:
   validator_1:
@@ -13,180 +24,168 @@ services:
     container_name: validator_1
     restart: unless-stopped
     networks:
-      - chain_net
+      chain_net:
+        ipv4_address: ${IP_VALIDATOR_1:-172.28.0.11}
     environment:
-      BASE_DIR: /data/chain
-      BIN_DIR: /data/chain/bin
-      DATA_DIR: /data/app/node
-      KEYS_DIR: /data/app/keys
-      DB_ENGINE: ${DB_ENGINE:-pebble}
-      STATE_SCHEME: hash
-      SYNC_MODE: full
-      PASSWORD: ${PASSWORD:-localchain-dev}
-      HTTP_ADDR: "0.0.0.0"
-      WS_ADDR: "0.0.0.0"
-      HTTP_CORS_DOMAIN: ${HTTP_CORS_DOMAIN:-*}
-      HTTP_VHOSTS: ${HTTP_VHOSTS:-*}
-      WS_ORIGINS: ${WS_ORIGINS:-*}
-      VALIDATOR_INDEX: "001"
-      GC_MODE: full
+      BASE_DIR: "/data/app"
+      DATA_DIR: "/data/app/node"
+      BIN_DIR: "/data/chain/bin"
+      KEYS_DIR: "/data/app/keys"
+      DB_ENGINE: "${DB_ENGINE:-pebble}"
+      GC_MODE: "full"
+      STATE_SCHEME: "hash"
+      SYNC_MODE: "full"
+      PASSWORD: "${PASSWORD:-localchain-dev}"
       HTTP_PORT: "8545"
       WS_PORT: "8546"
       P2P_PORT: "30303"
       METRICS_PORT: "6060"
-      PPROF_PORT: "7060"
-      RPC_URL: http://127.0.0.1:8545
-      HTTP_API: eth,net,web3,txpool
-      WS_API: eth,net,web3,txpool
-      MINER_GAS_PRICE: ${MINER_GAS_PRICE:-20000000000}
-      MINER_GAS_LIMIT: ${MINER_GAS_LIMIT:-35000000}
-      STAKE_AMOUNT: ${STAKE_AMOUNT:-2001}
+      PPROF_PORT: "7070"
+      STAKE_AMOUNT: "${STAKE_AMOUNT:-2001}"
+      HTTP_API: "eth,net,web3,txpool,debug,mev,miner,admin,parlia"
+      WS_API: "eth,net,web3,txpool,debug,mev,miner,admin,parlia"
+      MINER_GAS_PRICE: "${MINER_GAS_PRICE:-20000000000}"
+      MINER_GAS_LIMIT: "${MINER_GAS_LIMIT:-35000000}"
+      VALIDATOR_INDEX: "001"
+      RPC_URL: "http://127.0.0.1:8545"
+      HTTP_ADDR: "0.0.0.0"
+      WS_ADDR: "0.0.0.0"
+      HTTP_CORS_DOMAIN: "${HTTP_CORS_DOMAIN:-*}"
+      HTTP_VHOSTS: "${HTTP_VHOSTS:-*}"
+      WS_ORIGINS: "${WS_ORIGINS:-*}"
     volumes:
       - ./node_validator_1/app:/data/app
-      - ./node_validator_1/config-src:/data/chain/config:ro
-      - ./node_validator_1/config-src:/data/chain/config-src:ro
-      - ./node_validator_1/node_generate_key.sh:/data/chain/node_generate_key.sh:ro
-      - ./node_validator_1/bls_expect.sh:/data/chain/bin/scripts/bls_expect.sh:ro
-      - ./node_validator_1/node_validator_start.sh:/data/chain/bin/scripts/node_validator_start.sh:ro
     ports:
       - "${BIND_ADDR:-0.0.0.0}:8545:8545"
       - "${BIND_ADDR:-0.0.0.0}:8546:8546"
       - "${BIND_ADDR:-0.0.0.0}:30303:30303"
       - "${BIND_ADDR:-0.0.0.0}:30303:30303/udp"
-    command: ["bash", "-c", "/data/chain/bin/scripts/node_validator_start.sh"]
+    command: ["bash", "-c", "/data/app/node_validator_start.sh"]
 
   validator_2:
     image: ${CHAIN_IMAGE:-botchainprod/chain-node-rpc:testnet-ccfbce-20260702135343}
     container_name: validator_2
     restart: unless-stopped
     networks:
-      - chain_net
+      chain_net:
+        ipv4_address: ${IP_VALIDATOR_2:-172.28.0.12}
     depends_on:
       - validator_1
     environment:
-      BASE_DIR: /data/chain
-      BIN_DIR: /data/chain/bin
-      DATA_DIR: /data/app/node
-      KEYS_DIR: /data/app/keys
-      DB_ENGINE: ${DB_ENGINE:-pebble}
-      STATE_SCHEME: hash
-      SYNC_MODE: full
-      PASSWORD: ${PASSWORD:-localchain-dev}
-      HTTP_ADDR: "0.0.0.0"
-      WS_ADDR: "0.0.0.0"
-      HTTP_CORS_DOMAIN: ${HTTP_CORS_DOMAIN:-*}
-      HTTP_VHOSTS: ${HTTP_VHOSTS:-*}
-      WS_ORIGINS: ${WS_ORIGINS:-*}
-      VALIDATOR_INDEX: "002"
-      GC_MODE: full
+      BASE_DIR: "/data/app"
+      DATA_DIR: "/data/app/node"
+      BIN_DIR: "/data/chain/bin"
+      KEYS_DIR: "/data/app/keys"
+      DB_ENGINE: "${DB_ENGINE:-pebble}"
+      GC_MODE: "full"
+      STATE_SCHEME: "hash"
+      SYNC_MODE: "full"
+      PASSWORD: "${PASSWORD:-localchain-dev}"
       HTTP_PORT: "8545"
       WS_PORT: "8546"
       P2P_PORT: "30303"
       METRICS_PORT: "6060"
-      PPROF_PORT: "7060"
-      RPC_URL: http://validator_1:8545
-      BOOTNODES: ${BOOTNODES:-}
-      HTTP_API: eth,net,web3,txpool
-      WS_API: eth,net,web3,txpool
-      MINER_GAS_PRICE: ${MINER_GAS_PRICE:-20000000000}
-      MINER_GAS_LIMIT: ${MINER_GAS_LIMIT:-35000000}
-      STAKE_AMOUNT: ${STAKE_AMOUNT:-2001}
+      PPROF_PORT: "7070"
+      STAKE_AMOUNT: "${STAKE_AMOUNT:-2001}"
+      HTTP_API: "eth,net,web3,txpool,debug,mev,miner,admin,parlia"
+      WS_API: "eth,net,web3,txpool,debug,mev,miner,admin,parlia"
+      MINER_GAS_PRICE: "${MINER_GAS_PRICE:-20000000000}"
+      MINER_GAS_LIMIT: "${MINER_GAS_LIMIT:-35000000}"
+      VALIDATOR_INDEX: "002"
+      RPC_URL: "http://validator_1:8545"
+      BOOTNODES: "${BOOTNODES:-}"
+      HTTP_ADDR: "0.0.0.0"
+      WS_ADDR: "0.0.0.0"
+      HTTP_CORS_DOMAIN: "${HTTP_CORS_DOMAIN:-*}"
+      HTTP_VHOSTS: "${HTTP_VHOSTS:-*}"
+      WS_ORIGINS: "${WS_ORIGINS:-*}"
     volumes:
       - ./node_validator_2/app:/data/app
-      - ./node_validator_2/config-src:/data/chain/config:ro
-      - ./node_validator_2/config-src:/data/chain/config-src:ro
-      - ./node_validator_2/node_generate_key.sh:/data/chain/node_generate_key.sh:ro
-      - ./node_validator_2/bls_expect.sh:/data/chain/bin/scripts/bls_expect.sh:ro
-      - ./node_validator_2/node_validator_start.sh:/data/chain/bin/scripts/node_validator_start.sh:ro
     ports:
       - "${BIND_ADDR:-0.0.0.0}:8555:8545"
       - "${BIND_ADDR:-0.0.0.0}:8556:8546"
       - "${BIND_ADDR:-0.0.0.0}:30304:30303"
       - "${BIND_ADDR:-0.0.0.0}:30304:30303/udp"
-    command: ["bash", "-c", "/data/chain/bin/scripts/node_validator_start.sh"]
+    command: ["bash", "-c", "/data/app/node_validator_start.sh"]
 
   full_node:
     image: ${CHAIN_IMAGE:-botchainprod/chain-node-rpc:testnet-ccfbce-20260702135343}
     container_name: full_node
     restart: unless-stopped
     networks:
-      - chain_net
+      chain_net:
+        ipv4_address: ${IP_FULL:-172.28.0.13}
     depends_on:
       - validator_1
     environment:
-      BASE_DIR: /data/chain
-      BIN_DIR: /data/chain/bin
-      DATA_DIR: /data/app/node
-      KEYS_DIR: /data/app/keys
-      DB_ENGINE: ${DB_ENGINE:-pebble}
-      STATE_SCHEME: hash
-      SYNC_MODE: full
-      PASSWORD: ${PASSWORD:-localchain-dev}
-      HTTP_ADDR: "0.0.0.0"
-      WS_ADDR: "0.0.0.0"
-      HTTP_CORS_DOMAIN: ${HTTP_CORS_DOMAIN:-*}
-      HTTP_VHOSTS: ${HTTP_VHOSTS:-*}
-      WS_ORIGINS: ${WS_ORIGINS:-*}
-      GC_MODE: full
+      BASE_DIR: "/data/app"
+      BIN_DIR: "/data/chain/bin"
+      DATA_DIR: "/data/app/node"
+      KEYS_DIR: "/data/app/keys"
+      DB_ENGINE: "${DB_ENGINE:-pebble}"
+      STATE_SCHEME: "hash"
+      SYNC_MODE: "full"
+      GC_MODE: "full"
       HTTP_PORT: "8545"
       WS_PORT: "8546"
       P2P_PORT: "30303"
       METRICS_PORT: "6060"
       PPROF_PORT: "7060"
-      BOOTNODES: ${BOOTNODES:-}
-      HTTP_API: eth,net,web3,txpool
-      WS_API: eth,net,web3,txpool
-      CACHE_MB: ${FULL_CACHE_MB:-4096}
+      BOOTNODES: "${BOOTNODES:-}"
+      HTTP_API: "eth,net,web3,txpool"
+      WS_API: "eth,net,web3,txpool"
+      CACHE_MB: "${FULL_CACHE_MB:-4096}"
+      HTTP_ADDR: "0.0.0.0"
+      WS_ADDR: "0.0.0.0"
+      HTTP_CORS_DOMAIN: "${HTTP_CORS_DOMAIN:-*}"
+      HTTP_VHOSTS: "${HTTP_VHOSTS:-*}"
+      WS_ORIGINS: "${WS_ORIGINS:-*}"
     volumes:
       - ./node_full/app:/data/app
-      - ./node_full/config-src:/data/chain/config-src:ro
-      - ./node_full/node_full_start.sh:/data/chain/bin/scripts/node_full_start.sh:ro
     ports:
       - "${BIND_ADDR:-0.0.0.0}:8565:8545"
       - "${BIND_ADDR:-0.0.0.0}:8566:8546"
       - "${BIND_ADDR:-0.0.0.0}:30305:30303"
       - "${BIND_ADDR:-0.0.0.0}:30305:30303/udp"
-    command: ["bash", "-c", "/data/chain/bin/scripts/node_full_start.sh"]
+    command: ["bash", "-c", "/data/app/node_full_start.sh"]
 
   archive_node:
     image: ${CHAIN_IMAGE:-botchainprod/chain-node-rpc:testnet-ccfbce-20260702135343}
     container_name: archive_node
     restart: unless-stopped
     networks:
-      - chain_net
+      chain_net:
+        ipv4_address: ${IP_ARCHIVE:-172.28.0.14}
     depends_on:
       - validator_1
     environment:
-      BASE_DIR: /data/chain
-      BIN_DIR: /data/chain/bin
-      DATA_DIR: /data/app/node
-      KEYS_DIR: /data/app/keys
-      DB_ENGINE: ${DB_ENGINE:-pebble}
-      STATE_SCHEME: hash
-      SYNC_MODE: full
-      PASSWORD: ${PASSWORD:-localchain-dev}
-      HTTP_ADDR: "0.0.0.0"
-      WS_ADDR: "0.0.0.0"
-      HTTP_CORS_DOMAIN: ${HTTP_CORS_DOMAIN:-*}
-      HTTP_VHOSTS: ${HTTP_VHOSTS:-*}
-      WS_ORIGINS: ${WS_ORIGINS:-*}
-      GC_MODE: archive
+      BASE_DIR: "/data/app"
+      BIN_DIR: "/data/chain/bin"
+      DATA_DIR: "/data/app/node"
+      KEYS_DIR: "/data/app/keys"
+      DB_ENGINE: "${DB_ENGINE:-pebble}"
+      STATE_SCHEME: "hash"
+      SYNC_MODE: "full"
+      GC_MODE: "archive"
       HTTP_PORT: "8545"
       WS_PORT: "8546"
       P2P_PORT: "30303"
       METRICS_PORT: "6060"
       PPROF_PORT: "7060"
-      BOOTNODES: ${BOOTNODES:-}
-      HTTP_API: eth,net,web3,txpool,debug,trace
-      WS_API: eth,net,web3,txpool,debug
-      CACHE_MB: ${ARCHIVE_CACHE_MB:-8192}
+      BOOTNODES: "${BOOTNODES:-}"
+      HTTP_API: "eth,net,web3,txpool,debug,trace"
+      WS_API: "eth,net,web3,txpool,debug"
+      CACHE_MB: "${ARCHIVE_CACHE_MB:-8192}"
+      HTTP_ADDR: "0.0.0.0"
+      WS_ADDR: "0.0.0.0"
+      HTTP_CORS_DOMAIN: "${HTTP_CORS_DOMAIN:-*}"
+      HTTP_VHOSTS: "${HTTP_VHOSTS:-*}"
+      WS_ORIGINS: "${WS_ORIGINS:-*}"
     volumes:
       - ./node_archive/app:/data/app
-      - ./node_archive/config-src:/data/chain/config-src:ro
-      - ./node_archive/node_archive_start.sh:/data/chain/bin/scripts/node_archive_start.sh:ro
     ports:
       - "${BIND_ADDR:-0.0.0.0}:8575:8545"
       - "${BIND_ADDR:-0.0.0.0}:8576:8546"
       - "${BIND_ADDR:-0.0.0.0}:30306:30303"
       - "${BIND_ADDR:-0.0.0.0}:30306:30303/udp"
-    command: ["bash", "-c", "/data/chain/bin/scripts/node_archive_start.sh"]
+    command: ["bash", "-c", "/data/app/node_archive_start.sh"]

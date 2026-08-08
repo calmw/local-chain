@@ -3,8 +3,10 @@
 
 # 节点运行时数据 / 密钥
 app/
-node_*/app/node/
-node_*/app/keys/
+node_full/app/node/
+node_archive/app/node/
+node_validator_1/app/node/
+node_validator_2/app/node/
 **/geth.ipc
 **/clog.log
 
