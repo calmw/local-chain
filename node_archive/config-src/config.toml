@@ -1,0 +1,126 @@
+[Eth]
+NetworkId = 968
+SyncMode = "full"
+DisablePeerTxBroadcast = false
+EVNNodeIDsToAdd = []
+EVNNodeIDsToRemove = []
+EthDiscoveryURLs = []
+SnapDiscoveryURLs = []
+BscDiscoveryURLs = []
+NoPruning = false
+NoPrefetch = false
+DirectBroadcast = false
+DisableSnapProtocol = false
+RangeLimit = false
+JournalFileEnabled = false
+DatabaseCache = 512
+DatabaseFreezer = ""
+PruneAncientData = false
+TrieCleanCache = 256
+TrieDirtyCache = 256
+TrieTimeout = 3600000000000
+SnapshotCache = 0
+TriesInMemory = 128
+TriesVerifyMode = "local"
+Preimages = false
+FilterLogCacheSize = 0
+EnablePreimageRecording = false
+VMTrace = ""
+VMTraceJsonConfig = ""
+RPCGasCap = 0
+RPCEVMTimeout = 0
+RPCTxFeeCap = 0e+00
+BlobExtraReserve = 0
+
+[Eth.Miner]
+GasFloor = 0
+GasCeil = 35000000
+GasPrice = 47619047620
+Recommit = 10000000000
+VoteEnable = false
+DisableVoteAttestation = false
+
+[Eth.Miner.Mev]
+Enabled = true
+GreedyMergeTx = true
+BuilderFeeCeil = "0"
+SentryURL = ""
+ValidatorCommission = 1000
+
+[[Eth.Miner.Mev.Builders]]
+Address = "0x04d63abcd2b9b1baa327f2dda0f873f197ccd186"
+URL = ""
+
+[Eth.TxPool]
+Locals = []
+NoLocals = true
+Journal = "transactions.rlp"
+Rejournal = 3600000000000
+PriceLimit = 47619047620
+PriceBump = 10
+AccountSlots = 16
+GlobalSlots = 4096
+AccountQueue = 64
+GlobalQueue = 1024
+OverflowPoolSlots = 0
+Lifetime = 10800000000000
+ReannounceTime = 0
+
+[Eth.BlobPool]
+Datadir = ""
+Datacap = 0
+PriceBump = 0
+
+[Eth.GPO]
+Blocks = 0
+Percentile = 0
+MaxHeaderHistory = 0
+MaxBlockHistory = 0
+
+[Node]
+DataDir = ""
+InsecureUnlockAllowed = true
+EnableEVNFeatures = true
+EnableQuickBlockFetching = true
+IPCPath = "geth.ipc"
+HTTPHost = "0.0.0.0"
+HTTPPort = 8545
+HTTPVirtualHosts = ["*"]
+HTTPModules = ["eth", "mev", "net", "web3", "txpool", "parlia", "debug"]
+WSHost = "0.0.0.0"
+WSPort = 8545
+WSModules = []
+
+[Node.P2P]
+MaxPeers = 50
+NoDiscovery = false
+BootstrapNodes = [
+    "enode://449fd352f6a234cbd90ecf919c183c33f794ac99df3210de07c5f3f4976b445c9f4e7f436385d06b04e967af2d6ce212a694a585bd341f53955e0b8c0640d364@13.115.178.211:30301",
+    "enode://059e8d77975a67ce294475330f59fd133f4c889080619080ee45ed973403db1d7e116087a422670c7af798b4eaa64fbe4457bbea046f5de462663985f69a853a@13.115.178.211:30302",
+]
+StaticNodes = []
+TrustedNodes = []
+ListenAddr = ":30303"
+DiscAddr = ""
+EnableMsgEvents = false
+PeerFilterPatterns = []
+
+[Node.HTTPTimeouts]
+ReadTimeout = 30000000000
+ReadHeaderTimeout = 0
+WriteTimeout = 30000000000
+IdleTimeout = 120000000000
+
+[FakeBeacon]
+Enable = false
+Addr = ""
+Port = 0
+
+[Node.LogConfig]
+# FilePath = "clog.log"
+TimeFormat = "01-02|15:04:05.000"
+# MaxBackups = 1000
+# MaxBytesSize = 10485760
+Level = "info"
+# FileRoot = ""
+

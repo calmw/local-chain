@@ -1,0 +1,45 @@
+networks:
+  chain_net:
+
+services:
+
+  archive_node:
+    image: botchainprod/chain-node-rpc:testnet-ccfbce-20260702135343
+    container_name: archive_node
+    networks:
+      - chain_net
+    restart: always
+    environment:
+      BASE_DIR: "/data/app"
+      DATA_DIR: "/data/app/node"
+      BIN_DIR: "/data/chain/bin"
+      KEYS_DIR: "/data/app/keys"
+      DB_ENGINE: "pebble"
+      GC_MODE: "archive"
+      STATE_SCHEME: "hash"
+      SYNC_MODE: "full"
+      HTTP_PORT: "8545"
+      WS_PORT: "8546"
+      P2P_PORT: "30303"
+      METRICS_PORT: "6060"
+      PPROF_PORT: "7070"
+      HTTP_API: "eth,net,web3,txpool"
+      WS_API: "eth,net,web3,txpool"
+      MINER_GAS_PRICE: "47619047620"
+      MINER_GAS_LIMIT: "35000000"
+      RIALTO_HASH: "0x395bd3d6583216495648e8322032761c1a377eddf04f59de0c693c7d6682aee6"
+      BOOTNODES: "enode://449fd352f6a234cbd90ecf919c183c33f794ac99df3210de07c5f3f4976b445c9f4e7f436385d06b04e967af2d6ce212a694a585bd341f53955e0b8c0640d364@13.115.178.211:30301,enode://059e8d77975a67ce294475330f59fd133f4c889080619080ee45ed973403db1d7e116087a422670c7af798b4eaa64fbe4457bbea046f5de462663985f69a853a@13.115.178.211:30302"
+    volumes:
+      - ./app:/data/app
+    ports:
+      - "8545:8545"
+      - "8546:8546"
+      - "30303:30303"
+      - "30303:30303/udp"
+
+    command: [ "bash", "-c", "/data/chain/bin/scripts/node_archive_start.sh" ]
+
+
+
+
+
