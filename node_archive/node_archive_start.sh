@@ -25,7 +25,10 @@ HTTP_ADDR=${HTTP_ADDR:-0.0.0.0}
 WS_ADDR=${WS_ADDR:-0.0.0.0}
 METRICS_ADDR=${METRICS_ADDR:-0.0.0.0}
 PPROF_ADDR=${PPROF_ADDR:-127.0.0.1}      # 安全：pprof 不暴露公网，避免 heap/profile 泄露
-# WS 跨域：默认 * 保持向后兼容；生产建议显式白名单 export WS_ORIGINS="https://your-app.example.com"
+# 外部/Tailscale 访问：CORS 与 Virtual Host（Host 头）默认放开；生产请收紧
+HTTP_CORS_DOMAIN=${HTTP_CORS_DOMAIN:-*}
+HTTP_VHOSTS=${HTTP_VHOSTS:-*}
+# WS 跨域：默认 *；生产建议显式白名单 export WS_ORIGINS="https://your-app.example.com"
 WS_ORIGINS=${WS_ORIGINS:-"*"}
 # Archive 节点状态读多，建议较大缓存
 CACHE_MB=${CACHE_MB:-8192}
@@ -78,6 +81,7 @@ exec "$BIN_DIR/geth" \
     --rpc.gascap "${RPC_GAS_CAP}" \
     --cache "${CACHE_MB}" \
     --http --http.addr "${HTTP_ADDR}" --http.port "${HTTP_PORT}" --http.api "${HTTP_API}" \
+    --http.corsdomain "${HTTP_CORS_DOMAIN}" --http.vhosts "${HTTP_VHOSTS}" \
     --ws --ws.addr "${WS_ADDR}" --ws.port "${WS_PORT}" --ws.api "${WS_API}" --ws.origins "${WS_ORIGINS}" \
     --metrics --metrics.addr "${METRICS_ADDR}" --metrics.port "${METRICS_PORT}" \
     --pprof --pprof.addr "${PPROF_ADDR}" --pprof.port "${PPROF_PORT}" \

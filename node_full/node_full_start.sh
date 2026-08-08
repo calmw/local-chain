@@ -7,7 +7,7 @@ DATA_DIR=${DATA_DIR:-"/data/app/node"}
 HTTP_PORT=${HTTP_PORT:-8545}
 WS_PORT=${WS_PORT:-8546}
 DB_ENGINE=${DB_ENGINE:-leveldb}
-GC_MODE=${GC_MODE:-archive}
+GC_MODE=${GC_MODE:-full}
 TX_FEE_CAP=${TX_FEE_CAP:-100}
 HTTP_API=${HTTP_API:-"eth,net,web3,txpool"}
 WS_API=${WS_API:-"eth,net,web3,txpool"}
@@ -20,15 +20,18 @@ STATE_SCHEME=${STATE_SCHEME:-hash}
 
 # 显式设置 RPC gas cap，避免 config.toml 的 RPCGasCap=0 触发 eth_createAccessList 异常
 RPC_GAS_CAP=${RPC_GAS_CAP:-50000000}
-# 接口监听地址：archive 提供对外 RPC，HTTP/WS/metrics 可 0.0.0.0；pprof 必须本机
+# 接口监听地址：full 节点提供对外 RPC，HTTP/WS/metrics 可 0.0.0.0；pprof 必须本机
 HTTP_ADDR=${HTTP_ADDR:-0.0.0.0}
 WS_ADDR=${WS_ADDR:-0.0.0.0}
 METRICS_ADDR=${METRICS_ADDR:-0.0.0.0}
 PPROF_ADDR=${PPROF_ADDR:-127.0.0.1}      # 安全：pprof 不暴露公网，避免 heap/profile 泄露
-# WS 跨域：默认 * 保持向后兼容；生产建议显式白名单 export WS_ORIGINS="https://your-app.example.com"
+# 外部/Tailscale 访问：CORS 与 Virtual Host（Host 头）默认放开；生产请收紧
+HTTP_CORS_DOMAIN=${HTTP_CORS_DOMAIN:-*}
+HTTP_VHOSTS=${HTTP_VHOSTS:-*}
+# WS 跨域：默认 *；生产建议显式白名单 export WS_ORIGINS="https://your-app.example.com"
 WS_ORIGINS=${WS_ORIGINS:-"*"}
-# Archive 节点状态读多，建议较大缓存
-CACHE_MB=${CACHE_MB:-8192}
+# Full 节点默认缓存（可按机器内存 export CACHE_MB 覆盖）
+CACHE_MB=${CACHE_MB:-4096}
 
 if [ -d "$DATA_DIR" ] && [ $(ls -A "$DATA_DIR" | grep -v lost+found | wc -l) -ne 0 ]; then
     echo "初始化目录已存在，禁止重复初始化：$DATA_DIR"
@@ -44,7 +47,7 @@ else
     "${DATA_DIR}/genesis.json" > "$DATA_DIR/init.log" 2>&1
 fi
 
-echo "==> Starting node (exec geth → docker logs / SIGTERM → geth)"
+echo "==> Starting full node (exec geth → docker logs / SIGTERM → geth)"
 echo "HTTP: ${HTTP_PORT}, WS: ${WS_PORT}"
 echo ""
 
@@ -78,6 +81,7 @@ exec "$BIN_DIR/geth" \
     --rpc.gascap "${RPC_GAS_CAP}" \
     --cache "${CACHE_MB}" \
     --http --http.addr "${HTTP_ADDR}" --http.port "${HTTP_PORT}" --http.api "${HTTP_API}" \
+    --http.corsdomain "${HTTP_CORS_DOMAIN}" --http.vhosts "${HTTP_VHOSTS}" \
     --ws --ws.addr "${WS_ADDR}" --ws.port "${WS_PORT}" --ws.api "${WS_API}" --ws.origins "${WS_ORIGINS}" \
     --metrics --metrics.addr "${METRICS_ADDR}" --metrics.port "${METRICS_PORT}" \
     --pprof --pprof.addr "${PPROF_ADDR}" --pprof.port "${PPROF_PORT}" \
@@ -87,5 +91,3 @@ exec "$BIN_DIR/geth" \
     --db.engine "${DB_ENGINE}" \
     --log.rotate --log.maxsize 100 --log.maxage 7 \
     --log.format terminal
-
-

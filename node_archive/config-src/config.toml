@@ -1,5 +1,5 @@
 [Eth]
-NetworkId = 968
+NetworkId = 100000
 SyncMode = "full"
 DisablePeerTxBroadcast = false
 EVNNodeIDsToAdd = []
@@ -35,7 +35,7 @@ BlobExtraReserve = 0
 [Eth.Miner]
 GasFloor = 0
 GasCeil = 35000000
-GasPrice = 47619047620
+GasPrice = 20000000000
 Recommit = 10000000000
 VoteEnable = false
 DisableVoteAttestation = false
@@ -56,7 +56,7 @@ Locals = []
 NoLocals = true
 Journal = "transactions.rlp"
 Rejournal = 3600000000000
-PriceLimit = 47619047620
+PriceLimit = 20000000000
 PriceBump = 10
 AccountSlots = 16
 GlobalSlots = 4096
@@ -94,10 +94,7 @@ WSModules = []
 [Node.P2P]
 MaxPeers = 50
 NoDiscovery = false
-BootstrapNodes = [
-    "enode://449fd352f6a234cbd90ecf919c183c33f794ac99df3210de07c5f3f4976b445c9f4e7f436385d06b04e967af2d6ce212a694a585bd341f53955e0b8c0640d364@13.115.178.211:30301",
-    "enode://059e8d77975a67ce294475330f59fd133f4c889080619080ee45ed973403db1d7e116087a422670c7af798b4eaa64fbe4457bbea046f5de462663985f69a853a@13.115.178.211:30302",
-]
+BootstrapNodes = []
 StaticNodes = []
 TrustedNodes = []
 ListenAddr = ":30303"

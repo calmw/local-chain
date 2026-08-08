@@ -12,7 +12,7 @@
 # =============================================================================
 set -euo pipefail
 
-EXPECTED_CHAIN_ID=968
+EXPECTED_CHAIN_ID=100000
 BLOCK_WAIT_SEC=8
 CURL_TIMEOUT=10
 

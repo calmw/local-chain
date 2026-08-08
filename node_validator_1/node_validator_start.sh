@@ -29,6 +29,10 @@ HTTP_ADDR=${HTTP_ADDR:-0.0.0.0}
 WS_ADDR=${WS_ADDR:-0.0.0.0}
 METRICS_ADDR=${METRICS_ADDR:-0.0.0.0}
 PPROF_ADDR=${PPROF_ADDR:-127.0.0.1}      # 安全：pprof 不暴露公网，防止解锁的私钥被 heap dump 泄露
+# 外部/Tailscale 访问：CORS 与 Virtual Host 默认放开（验证者勿对公网暴露）
+HTTP_CORS_DOMAIN=${HTTP_CORS_DOMAIN:-*}
+HTTP_VHOSTS=${HTTP_VHOSTS:-*}
+WS_ORIGINS=${WS_ORIGINS:-"*"}
 # IPC 路径放 datadir 下，避免 /tmp 共享/冲突
 IPC_PATH=${IPC_PATH:-${DATA_DIR}/geth.ipc}
 
@@ -101,7 +105,8 @@ run_geth_exec() {
     --miner.gaslimit "${MINER_GAS_LIMIT}" \
     --rpc.gascap "${RPC_GAS_CAP}" \
     --http --http.addr "${HTTP_ADDR}" --http.port "${HTTP_PORT}" --http.api "${HTTP_API}" \
-    --ws --ws.addr "${WS_ADDR}" --ws.port "${WS_PORT}" --ws.api "${WS_API}" \
+    --http.corsdomain "${HTTP_CORS_DOMAIN}" --http.vhosts "${HTTP_VHOSTS}" \
+    --ws --ws.addr "${WS_ADDR}" --ws.port "${WS_PORT}" --ws.api "${WS_API}" --ws.origins "${WS_ORIGINS}" \
     --metrics --metrics.addr "${METRICS_ADDR}" --metrics.port "${METRICS_PORT}" \
     --pprof --pprof.addr "${PPROF_ADDR}" --pprof.port "${PPROF_PORT}" \
     --rialtohash "${RIALTO_HASH}" \
@@ -260,7 +265,8 @@ else
         --miner.gaslimit ${MINER_GAS_LIMIT} \
         --rpc.gascap "${RPC_GAS_CAP}" \
         --http --http.addr "${HTTP_ADDR}" --http.port ${HTTP_PORT} --http.api "${HTTP_API}" \
-        --ws --ws.addr "${WS_ADDR}" --ws.port ${WS_PORT} --ws.api "${WS_API}" \
+        --http.corsdomain "${HTTP_CORS_DOMAIN}" --http.vhosts "${HTTP_VHOSTS}" \
+        --ws --ws.addr "${WS_ADDR}" --ws.port ${WS_PORT} --ws.api "${WS_API}" --ws.origins "${WS_ORIGINS}" \
         --metrics --metrics.addr "${METRICS_ADDR}" --metrics.port ${METRICS_PORT} \
         --pprof --pprof.addr "${PPROF_ADDR}" --pprof.port ${PPROF_PORT} \
         --rialtohash ${RIALTO_HASH} \
@@ -288,7 +294,8 @@ else
         --miner.gaslimit ${MINER_GAS_LIMIT} \
         --rpc.gascap "${RPC_GAS_CAP}" \
         --http --http.addr "${HTTP_ADDR}" --http.port ${HTTP_PORT} --http.api "${HTTP_API}" \
-        --ws --ws.addr "${WS_ADDR}" --ws.port ${WS_PORT} --ws.api "${WS_API}" \
+        --http.corsdomain "${HTTP_CORS_DOMAIN}" --http.vhosts "${HTTP_VHOSTS}" \
+        --ws --ws.addr "${WS_ADDR}" --ws.port ${WS_PORT} --ws.api "${WS_API}" --ws.origins "${WS_ORIGINS}" \
         --metrics --metrics.addr "${METRICS_ADDR}" --metrics.port ${METRICS_PORT} \
         --pprof --pprof.addr "${PPROF_ADDR}" --pprof.port ${PPROF_PORT} \
         --rialtohash ${RIALTO_HASH} \

@@ -1,0 +1,8 @@
+.env.local
+services/blockscout-db-data/
+services/stats-db-data/
+services/logs/
+services/dets/
+!services/logs/.gitkeep
+!services/dets/.gitkeep
+*.log

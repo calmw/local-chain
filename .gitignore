@@ -1,0 +1,12 @@
+.env
+.DS_Store
+
+# 节点运行时数据 / 密钥
+app/
+node_*/app/node/
+node_*/app/keys/
+**/geth.ipc
+**/clog.log
+
+# IDE
+.idea/

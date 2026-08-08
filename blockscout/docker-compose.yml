@@ -1,0 +1,137 @@
+# Blockscout for local-chain (Parlia / geth)
+# Based on blockscout/blockscout docker-compose @ v11.2.5 (geth.yml + local overrides)
+# Images: ghcr.io/blockscout/* (prebuilt, no source build)
+
+name: local-chain-blockscout
+
+networks:
+  default:
+  chain_net:
+    external: true
+    name: local-chain_net
+
+services:
+  redis-db:
+    extends:
+      file: ./services/redis.yml
+      service: redis-db
+
+  db-init:
+    extends:
+      file: ./services/db.yml
+      service: db-init
+
+  db:
+    depends_on:
+      db-init:
+        condition: service_completed_successfully
+    extends:
+      file: ./services/db.yml
+      service: db
+
+  backend:
+    depends_on:
+      - db
+      - redis-db
+      - smart-contract-verifier
+      - visualizer
+      - sig-provider
+    extends:
+      file: ./services/backend.yml
+      service: backend
+    links:
+      - db:database
+    networks:
+      - default
+      - chain_net
+    environment:
+      ETHEREUM_JSONRPC_VARIANT: geth
+      # 默认走 docker 网络直连 archive；也可在 .env 改回 host.docker.internal:8575
+      ETHEREUM_JSONRPC_HTTP_URL: ${RPC_HTTP_URL:-http://archive_node:8545/}
+      ETHEREUM_JSONRPC_TRACE_URL: ${RPC_TRACE_URL:-http://archive_node:8545/}
+      ETHEREUM_JSONRPC_WS_URL: ${RPC_WS_URL:-ws://archive_node:8546/}
+      CHAIN_ID: ${CHAIN_ID:-100000}
+      COIN: ${COIN:-LC}
+      COIN_NAME: ${COIN_NAME:-LocalCoin}
+      INDEXER_DISABLE_INTERNAL_TRANSACTIONS_FETCHER: ${INDEXER_DISABLE_INTERNAL_TRANSACTIONS_FETCHER:-false}
+      INDEXER_DISABLE_PENDING_TRANSACTIONS_FETCHER: ${INDEXER_DISABLE_PENDING_TRANSACTIONS_FETCHER:-false}
+      # 允许通过 Tailscale 主机名 / IP 访问 API
+      CHECK_ORIGIN: ${CHECK_ORIGIN:-false}
+      BLOCKSCOUT_HOST: ${PUBLIC_HOST:-localhost}
+      BLOCKSCOUT_PROTOCOL: ${NEXT_PUBLIC_APP_PROTOCOL:-http}
+
+  visualizer:
+    extends:
+      file: ./services/visualizer.yml
+      service: visualizer
+
+  sig-provider:
+    extends:
+      file: ./services/sig-provider.yml
+      service: sig-provider
+
+  smart-contract-verifier:
+    extends:
+      file: ./services/smart-contract-verifier.yml
+      service: smart-contract-verifier
+
+  frontend:
+    depends_on:
+      - backend
+    extends:
+      file: ./services/frontend.yml
+      service: frontend
+    environment:
+      NEXT_PUBLIC_NETWORK_NAME: ${NETWORK_NAME:-Local Chain}
+      NEXT_PUBLIC_NETWORK_SHORT_NAME: ${NETWORK_SHORT_NAME:-Local}
+      NEXT_PUBLIC_NETWORK_ID: ${CHAIN_ID:-100000}
+      NEXT_PUBLIC_NETWORK_CURRENCY_NAME: ${COIN_NAME:-LocalCoin}
+      NEXT_PUBLIC_NETWORK_CURRENCY_SYMBOL: ${COIN:-LC}
+      NEXT_PUBLIC_NETWORK_CURRENCY_DECIMALS: "18"
+      NEXT_PUBLIC_IS_TESTNET: "true"
+      # 浏览器侧地址：由 .env / start.sh 按 PUBLIC_HOST 写入（勿用 localhost 外出访问）
+      NEXT_PUBLIC_API_HOST: ${NEXT_PUBLIC_API_HOST:-localhost}
+      NEXT_PUBLIC_APP_HOST: ${NEXT_PUBLIC_APP_HOST:-localhost}
+      NEXT_PUBLIC_API_PROTOCOL: ${NEXT_PUBLIC_API_PROTOCOL:-http}
+      NEXT_PUBLIC_APP_PROTOCOL: ${NEXT_PUBLIC_APP_PROTOCOL:-http}
+      NEXT_PUBLIC_STATS_API_HOST: ${NEXT_PUBLIC_STATS_API_HOST:-http://localhost:8080}
+      NEXT_PUBLIC_VISUALIZE_API_HOST: ${NEXT_PUBLIC_VISUALIZE_API_HOST:-http://localhost:8081}
+      NEXT_PUBLIC_NETWORK_RPC_URL: ${NEXT_PUBLIC_NETWORK_RPC_URL:-http://localhost:8575}
+
+  stats-db-init:
+    extends:
+      file: ./services/stats.yml
+      service: stats-db-init
+
+  stats-db:
+    depends_on:
+      stats-db-init:
+        condition: service_completed_successfully
+    extends:
+      file: ./services/stats.yml
+      service: stats-db
+
+  stats:
+    depends_on:
+      - stats-db
+      - backend
+    extends:
+      file: ./services/stats.yml
+      service: stats
+
+  user-ops-indexer:
+    depends_on:
+      - db
+      - backend
+    extends:
+      file: ./services/user-ops-indexer.yml
+      service: user-ops-indexer
+
+  proxy:
+    depends_on:
+      - backend
+      - frontend
+      - stats
+    extends:
+      file: ./services/nginx.yml
+      service: proxy
