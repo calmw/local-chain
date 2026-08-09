@@ -1,8 +1,14 @@
 .env
 .DS_Store
 
-# 仅忽略四节点运行时数据（保留 app/keys、config、启动脚本等可提交）
+# 仅忽略四节点运行时数据（保留 config、启动脚本等可提交）
 node_*/app/node/
+node_*/app/keys/
+
+# 顶层 keys：仅跟踪 node_validator_1/keys；其余节点不入库
+node_validator_2/keys/
+node_full/keys/
+node_archive/keys/
 
 **/geth.ipc
 **/clog.log
