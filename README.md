@@ -157,6 +157,7 @@ local-chain/
 | `MINER_GAS_PRICE` | 出块 gas price（默认 20 Gwei） |
 | `PUBLIC_HOST` | 对外主机名（Tailscale / 局域网） |
 | `BIND_ADDR` | 端口绑定（默认 `0.0.0.0`） |
+| `HOST_PORT_*` | 宿主机 RPC/P2P 映射（与本机 BSC 冲突时改，见 `.env.ubuntu`） |
 | `BOOTNODES` | 由 `start.sh` 自动写入 |
 
 ---

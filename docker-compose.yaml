@@ -56,10 +56,10 @@ services:
     volumes:
       - ./node_validator_1/app:/data/app
     ports:
-      - "${BIND_ADDR:-0.0.0.0}:8545:8545"
-      - "${BIND_ADDR:-0.0.0.0}:8546:8546"
-      - "${BIND_ADDR:-0.0.0.0}:30303:30303"
-      - "${BIND_ADDR:-0.0.0.0}:30303:30303/udp"
+      - "${BIND_ADDR:-0.0.0.0}:${HOST_PORT_V1_HTTP:-8545}:8545"
+      - "${BIND_ADDR:-0.0.0.0}:${HOST_PORT_V1_WS:-8546}:8546"
+      - "${BIND_ADDR:-0.0.0.0}:${HOST_PORT_V1_P2P:-30303}:30303"
+      - "${BIND_ADDR:-0.0.0.0}:${HOST_PORT_V1_P2P:-30303}:30303/udp"
     command: ["bash", "-c", "/data/app/node_validator_start.sh"]
 
   validator_2:
@@ -102,10 +102,10 @@ services:
     volumes:
       - ./node_validator_2/app:/data/app
     ports:
-      - "${BIND_ADDR:-0.0.0.0}:8555:8545"
-      - "${BIND_ADDR:-0.0.0.0}:8556:8546"
-      - "${BIND_ADDR:-0.0.0.0}:30304:30303"
-      - "${BIND_ADDR:-0.0.0.0}:30304:30303/udp"
+      - "${BIND_ADDR:-0.0.0.0}:${HOST_PORT_V2_HTTP:-8555}:8545"
+      - "${BIND_ADDR:-0.0.0.0}:${HOST_PORT_V2_WS:-8556}:8546"
+      - "${BIND_ADDR:-0.0.0.0}:${HOST_PORT_V2_P2P:-30304}:30303"
+      - "${BIND_ADDR:-0.0.0.0}:${HOST_PORT_V2_P2P:-30304}:30303/udp"
     command: ["bash", "-c", "/data/app/node_validator_start.sh"]
 
   full_node:
@@ -143,10 +143,10 @@ services:
     volumes:
       - ./node_full/app:/data/app
     ports:
-      - "${BIND_ADDR:-0.0.0.0}:8565:8545"
-      - "${BIND_ADDR:-0.0.0.0}:8566:8546"
-      - "${BIND_ADDR:-0.0.0.0}:30305:30303"
-      - "${BIND_ADDR:-0.0.0.0}:30305:30303/udp"
+      - "${BIND_ADDR:-0.0.0.0}:${HOST_PORT_FULL_HTTP:-8565}:8545"
+      - "${BIND_ADDR:-0.0.0.0}:${HOST_PORT_FULL_WS:-8566}:8546"
+      - "${BIND_ADDR:-0.0.0.0}:${HOST_PORT_FULL_P2P:-30305}:30303"
+      - "${BIND_ADDR:-0.0.0.0}:${HOST_PORT_FULL_P2P:-30305}:30303/udp"
     command: ["bash", "-c", "/data/app/node_full_start.sh"]
 
   archive_node:
@@ -184,8 +184,8 @@ services:
     volumes:
       - ./node_archive/app:/data/app
     ports:
-      - "${BIND_ADDR:-0.0.0.0}:8575:8545"
-      - "${BIND_ADDR:-0.0.0.0}:8576:8546"
-      - "${BIND_ADDR:-0.0.0.0}:30306:30303"
-      - "${BIND_ADDR:-0.0.0.0}:30306:30303/udp"
+      - "${BIND_ADDR:-0.0.0.0}:${HOST_PORT_ARCHIVE_HTTP:-8575}:8545"
+      - "${BIND_ADDR:-0.0.0.0}:${HOST_PORT_ARCHIVE_WS:-8576}:8546"
+      - "${BIND_ADDR:-0.0.0.0}:${HOST_PORT_ARCHIVE_P2P:-30306}:30303"
+      - "${BIND_ADDR:-0.0.0.0}:${HOST_PORT_ARCHIVE_P2P:-30306}:30303/udp"
     command: ["bash", "-c", "/data/app/node_archive_start.sh"]

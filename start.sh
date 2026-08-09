@@ -189,8 +189,10 @@ start_nodes() {
   log "启动 validator_2 / full_node / archive_node ..."
   compose_chain up -d validator_2 full_node archive_node
 
-  wait_rpc "http://127.0.0.1:8575" "${WAIT_RPC_TIMEOUT_SEC}" || \
-    wait_rpc "http://127.0.0.1:8545" 60 || true
+  local archive_http="${HOST_PORT_ARCHIVE_HTTP:-8575}"
+  local v1_http="${HOST_PORT_V1_HTTP:-8545}"
+  wait_rpc "http://127.0.0.1:${archive_http}" "${WAIT_RPC_TIMEOUT_SEC}" || \
+    wait_rpc "http://127.0.0.1:${v1_http}" 60 || true
 
   log "链节点状态:"
   compose_chain ps
@@ -202,6 +204,7 @@ sync_public_host_to_blockscout() {
   local host="${PUBLIC_HOST:-localhost}"
   local proto="${NEXT_PUBLIC_APP_PROTOCOL:-http}"
   local bind="${BIND_ADDR:-0.0.0.0}"
+  local archive_http="${HOST_PORT_ARCHIVE_HTTP:-8575}"
 
   # 去掉误填的协议前缀
   host="${host#http://}"
@@ -218,7 +221,7 @@ sync_public_host_to_blockscout() {
   local tmp
   tmp="$(mktemp)"
   # awk 函数内不能使用 next，故在规则里直接改写
-  awk -v host="${host}" -v proto="${proto}" -v bind="${bind}" '
+  awk -v host="${host}" -v proto="${proto}" -v bind="${bind}" -v archive_http="${archive_http}" '
     /^PUBLIC_HOST=/ { print "PUBLIC_HOST=" host; seen["PUBLIC_HOST"]=1; next }
     /^BIND_ADDR=/ { print "BIND_ADDR=" bind; seen["BIND_ADDR"]=1; next }
     /^NEXT_PUBLIC_API_HOST=/ { print "NEXT_PUBLIC_API_HOST=" host; seen["NEXT_PUBLIC_API_HOST"]=1; next }
@@ -227,7 +230,7 @@ sync_public_host_to_blockscout() {
     /^NEXT_PUBLIC_APP_PROTOCOL=/ { print "NEXT_PUBLIC_APP_PROTOCOL=" proto; seen["NEXT_PUBLIC_APP_PROTOCOL"]=1; next }
     /^NEXT_PUBLIC_STATS_API_HOST=/ { print "NEXT_PUBLIC_STATS_API_HOST=" proto "://" host ":8080"; seen["NEXT_PUBLIC_STATS_API_HOST"]=1; next }
     /^NEXT_PUBLIC_VISUALIZE_API_HOST=/ { print "NEXT_PUBLIC_VISUALIZE_API_HOST=" proto "://" host ":8081"; seen["NEXT_PUBLIC_VISUALIZE_API_HOST"]=1; next }
-    /^NEXT_PUBLIC_NETWORK_RPC_URL=/ { print "NEXT_PUBLIC_NETWORK_RPC_URL=" proto "://" host ":8575"; seen["NEXT_PUBLIC_NETWORK_RPC_URL"]=1; next }
+    /^NEXT_PUBLIC_NETWORK_RPC_URL=/ { print "NEXT_PUBLIC_NETWORK_RPC_URL=" proto "://" host ":" archive_http; seen["NEXT_PUBLIC_NETWORK_RPC_URL"]=1; next }
     { print }
     END {
       if (!seen["PUBLIC_HOST"]) print "PUBLIC_HOST=" host
@@ -238,7 +241,7 @@ sync_public_host_to_blockscout() {
       if (!seen["NEXT_PUBLIC_APP_PROTOCOL"]) print "NEXT_PUBLIC_APP_PROTOCOL=" proto
       if (!seen["NEXT_PUBLIC_STATS_API_HOST"]) print "NEXT_PUBLIC_STATS_API_HOST=" proto "://" host ":8080"
       if (!seen["NEXT_PUBLIC_VISUALIZE_API_HOST"]) print "NEXT_PUBLIC_VISUALIZE_API_HOST=" proto "://" host ":8081"
-      if (!seen["NEXT_PUBLIC_NETWORK_RPC_URL"]) print "NEXT_PUBLIC_NETWORK_RPC_URL=" proto "://" host ":8575"
+      if (!seen["NEXT_PUBLIC_NETWORK_RPC_URL"]) print "NEXT_PUBLIC_NETWORK_RPC_URL=" proto "://" host ":" archive_http
     }
   ' "${bs_env}" > "${tmp}"
   mv "${tmp}" "${bs_env}"
@@ -293,21 +296,25 @@ fi
 
 host="${PUBLIC_HOST:-localhost}"
 host="${host#http://}"; host="${host#https://}"; host="${host%%/*}"
+v1_http="${HOST_PORT_V1_HTTP:-8545}"
+v2_http="${HOST_PORT_V2_HTTP:-8555}"
+full_http="${HOST_PORT_FULL_HTTP:-8565}"
+archive_http="${HOST_PORT_ARCHIVE_HTTP:-8575}"
 
 echo ""
 log "完成"
 echo "  本机:"
-echo "    validator_1 RPC : http://127.0.0.1:8545"
-echo "    validator_2 RPC : http://127.0.0.1:8555"
-echo "    full RPC        : http://127.0.0.1:8565"
-echo "    archive RPC     : http://127.0.0.1:8575"
+echo "    validator_1 RPC : http://127.0.0.1:${v1_http}"
+echo "    validator_2 RPC : http://127.0.0.1:${v2_http}"
+echo "    full RPC        : http://127.0.0.1:${full_http}"
+echo "    archive RPC     : http://127.0.0.1:${archive_http}"
 if [[ "${START_BLOCKSCOUT}" == "1" && "${NODES_ONLY}" -eq 0 ]]; then
   echo "    Blockscout      : http://127.0.0.1/"
 fi
 echo "  外部/Tailscale (PUBLIC_HOST=${host}):"
-echo "    archive RPC     : http://${host}:8575"
-echo "    full RPC        : http://${host}:8565"
-echo "    validator_1 RPC : http://${host}:8545"
+echo "    archive RPC     : http://${host}:${archive_http}"
+echo "    full RPC        : http://${host}:${full_http}"
+echo "    validator_1 RPC : http://${host}:${v1_http}"
 if [[ "${START_BLOCKSCOUT}" == "1" && "${NODES_ONLY}" -eq 0 ]]; then
   echo "    Blockscout      : http://${host}/"
 fi

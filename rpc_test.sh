@@ -15,6 +15,16 @@
 # =============================================================================
 set -euo pipefail
 
+ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+if [[ -f "${ROOT_DIR}/.env" ]]; then
+  # shellcheck disable=SC1091
+  set -a
+  # 只导入端口相关，避免干扰检测逻辑
+  # shellcheck disable=SC1090
+  source "${ROOT_DIR}/.env"
+  set +a
+fi
+
 EXPECTED_CHAIN_ID="${EXPECTED_CHAIN_ID:-100000}"
 # compose 默认 MINER_GAS_PRICE=20000000000 (20 Gwei)
 EXPECTED_GAS_PRICE_WEI="${EXPECTED_GAS_PRICE_WEI:-20000000000}"
@@ -24,10 +34,10 @@ BLOCK_STALE_SEC="${BLOCK_STALE_SEC:-30}"
 CURL_TIMEOUT="${CURL_TIMEOUT:-10}"
 RPC_HOST="${RPC_HOST:-127.0.0.1}"
 
-FULL_HTTP_PORT="${FULL_HTTP_PORT:-8565}"
-FULL_WS_PORT="${FULL_WS_PORT:-8566}"
-ARCHIVE_HTTP_PORT="${ARCHIVE_HTTP_PORT:-8575}"
-ARCHIVE_WS_PORT="${ARCHIVE_WS_PORT:-8576}"
+FULL_HTTP_PORT="${FULL_HTTP_PORT:-${HOST_PORT_FULL_HTTP:-8565}}"
+FULL_WS_PORT="${FULL_WS_PORT:-${HOST_PORT_FULL_WS:-8566}}"
+ARCHIVE_HTTP_PORT="${ARCHIVE_HTTP_PORT:-${HOST_PORT_ARCHIVE_HTTP:-8575}}"
+ARCHIVE_WS_PORT="${ARCHIVE_WS_PORT:-${HOST_PORT_ARCHIVE_WS:-8576}}"
 
 CHECK_FULL=1
 CHECK_ARCHIVE=1
