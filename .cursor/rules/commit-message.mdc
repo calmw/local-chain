@@ -1,0 +1,11 @@
+---
+description: 本项目 Git 提交说明使用中文
+alwaysApply: true
+---
+
+# Commit message
+
+- 本仓库的 git commit message **必须使用中文**（简体）
+- 语气简洁，1–2 句说明「为什么 / 做了什么」，不要只堆文件名
+- 不要用英文标题式 subject（如 `Fix bootnodes`）；应写成中文，例如：`修复 bootnode 仅支持 IP 导致节点无法互联`
+- 专有名词、命令、路径可保留英文（如 `rpc_test.sh`、`Blockscout`、`BOOTNODES`）
