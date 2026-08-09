@@ -51,6 +51,7 @@ reset_stop_containers() {
 }
 
 # 清空目录内容，保留目录本身；含安全检查
+# Docker 卷常为 root 权限：宿主机 rm 失败时用临时容器以 root 删除
 reset_wipe_dir() {
   local dir="$1"
   local label="${2:-目录}"
@@ -84,9 +85,30 @@ reset_wipe_dir() {
 
   echo "==> 清空${label}: ${dir}"
   if [[ "${RESET_DRY_RUN}" -eq 1 ]]; then
-    echo "[dry-run] find ${dir} -mindepth 1 -maxdepth 1 -exec rm -rf {} +"
+    echo "[dry-run] rm -rf ${dir}/* (含 docker root 回退)"
     return 0
   fi
 
-  find "${dir}" -mindepth 1 -maxdepth 1 -exec rm -rf {} +
+  # 先尝试宿主机删除
+  if find "${dir}" -mindepth 1 -maxdepth 1 -exec rm -rf {} + 2>/dev/null; then
+    # 确认已空
+    if [[ -z "$(find "${dir}" -mindepth 1 -maxdepth 1 2>/dev/null | head -n1)" ]]; then
+      return 0
+    fi
+  fi
+
+  # Postgres 等目录多为容器 root 所有，用 alpine 以 root 清空
+  if command -v docker >/dev/null 2>&1; then
+    echo "==> ${label}权限受限，改用 docker 以 root 清空 ..."
+    docker run --rm -v "${dir}:/wipe" alpine:3.20 \
+      sh -c 'rm -rf /wipe/* /wipe/.[!.]* /wipe/..?* 2>/dev/null || true'
+  else
+    echo "ERROR: 无法清空 ${dir}（权限不足且无 docker）" >&2
+    exit 1
+  fi
+
+  if [[ -n "$(find "${dir}" -mindepth 1 -maxdepth 1 2>/dev/null | head -n1)" ]]; then
+    echo "ERROR: 清空失败，仍有残留: ${dir}" >&2
+    exit 1
+  fi
 }

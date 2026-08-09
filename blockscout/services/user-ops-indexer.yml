@@ -2,8 +2,8 @@ version: '3.9'
 
 services:
   user-ops-indexer:
-    image: ghcr.io/blockscout/user-ops-indexer:${USER_OPS_INDEXER_DOCKER_TAG:-latest}
-    pull_policy: always
+    image: ghcr.io/blockscout/user-ops-indexer:${USER_OPS_INDEXER_DOCKER_TAG:-v1.4.3}
+    pull_policy: missing
     platform: linux/amd64
     restart: always
     container_name: 'user-ops-indexer'
@@ -12,6 +12,7 @@ services:
     env_file:
       -  ../envs/common-user-ops-indexer.env
     environment:
-      - USER_OPS_INDEXER__INDEXER__RPC_URL=${USER_OPS_INDEXER__INDEXER__RPC_URL:-ws://host.docker.internal:8545/}
+      # 走 archive WS；依赖 backend 先建好 blocks 等主库表
+      - USER_OPS_INDEXER__INDEXER__RPC_URL=${USER_OPS_INDEXER__INDEXER__RPC_URL:-ws://archive_node:8546/}
       - USER_OPS_INDEXER__DATABASE__CONNECT__URL=${USER_OPS_INDEXER__DATABASE__CONNECT__URL:-postgresql://blockscout:ceWb1MeLBEeOIfk65gU8EjF8@db:5432/blockscout}
       - USER_OPS_INDEXER__DATABASE__RUN_MIGRATIONS=true

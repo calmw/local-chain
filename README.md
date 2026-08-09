@@ -39,7 +39,9 @@ cp -n .env.example .env
 ./start.sh                 # 重启 4 节点 + Blockscout
 ./stop.sh                  # 全部停止
 ./start.sh --nodes-only
-./start.sh --blockscout-only
+./start_blockscout.sh      # 只启浏览器
+./stop_blockscout.sh       # 只停浏览器
+./reset_blockscout.sh -y   # 清浏览器索引并重启
 ```
 
 首次验证者启动后，需向日志中的 `VALIDATOR_ADDR` 转入 ≥ **2005** 原生币，脚本才会完成 StakeHub 注册并持续出块。
@@ -88,6 +90,7 @@ local-chain/
 ├── README.md / docs/项目架构.md
 ├── .env.example / docker-compose.yaml
 ├── start.sh / stop.sh / reset.sh   # 启停；全量清库并重启
+├── start_blockscout.sh / stop_blockscout.sh / reset_blockscout.sh
 ├── reset_archive.sh / reset_full.sh / reset_validator.sh
 ├── scripts/reset_lib.sh
 ├── rpc_test/rpc_test_testnet.sh
@@ -117,6 +120,12 @@ local-chain/
 ## 常用运维
 
 ```bash
+# 浏览器（Blockscout）单独运维
+./start_blockscout.sh          # 启动/重启浏览器
+./stop_blockscout.sh           # 只停浏览器
+./reset_blockscout.sh -y       # 清索引数据并重启（不动链）
+./reset_blockscout.sh -y --no-start
+
 # 全量重置：down 节点+浏览器 → 删节点 app/node 与 Blockscout 数据 → start.sh
 ./reset.sh -y
 ./reset.sh -y --wipe-keys   # 连验证者密钥一起清
@@ -128,9 +137,6 @@ local-chain/
 ./reset_full.sh -y
 ./reset_validator.sh -y              # 保留密钥
 ./reset_validator.sh -y --wipe-keys  # 连密钥一起清
-
-# 改 Chain ID 后必须清数据并重 init；Blockscout 需：
-#   cd blockscout && docker compose --env-file .env down -v
 ```
 
 关键 `.env` 变量：

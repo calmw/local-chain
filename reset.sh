@@ -35,6 +35,7 @@ usage() {
   blockscout/services/stats-db-data
   blockscout/services/logs
   blockscout/services/dets
+  blockscout/services/redis-data
 EOF
 }
 
@@ -61,6 +62,7 @@ BS_DATA_DIRS=(
   "${ROOT_DIR}/blockscout/services/stats-db-data"
   "${ROOT_DIR}/blockscout/services/logs"
   "${ROOT_DIR}/blockscout/services/dets"
+  "${ROOT_DIR}/blockscout/services/redis-data"
 )
 
 KEY_DIRS=(

@@ -2,7 +2,7 @@ version: '3.9'
 
 services:
   proxy:
-    image: nginx
+    image: nginx:1.27.4-alpine
     container_name: proxy
     extra_hosts:
       - 'host.docker.internal:host-gateway'

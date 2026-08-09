@@ -2,8 +2,9 @@ version: '3.9'
 
 services:
   backend:
-    image: ghcr.io/blockscout/${DOCKER_REPO:-blockscout}:${DOCKER_TAG:-latest}
-    pull_policy: always
+    # GHCR 近版无公开 semver，默认钉 digest；可用 BLOCKSCOUT_IMAGE 覆盖
+    image: ${BLOCKSCOUT_IMAGE:-ghcr.io/blockscout/blockscout@sha256:7659f168e4e2f6b73dd559ae5278fe96ba67bc2905ea01b57a814c68adf5a9dc}
+    pull_policy: missing
     restart: always
     stop_grace_period: 5m
     container_name: 'backend'

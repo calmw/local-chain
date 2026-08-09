@@ -59,6 +59,10 @@ services:
       CHECK_ORIGIN: ${CHECK_ORIGIN:-false}
       BLOCKSCOUT_HOST: ${PUBLIC_HOST:-localhost}
       BLOCKSCOUT_PROTOCOL: ${NEXT_PUBLIC_APP_PROTOCOL:-http}
+      # 覆盖 env_file：本地 db 容器无 SSL（否则 v9 镜像报 ssl not available，blocks 表建不出来）
+      ECTO_USE_SSL: "false"
+      ECTO_SSL_MODE: disable
+      DATABASE_URL: postgresql://blockscout:ceWb1MeLBEeOIfk65gU8EjF8@db:5432/blockscout?ssl=false
 
   visualizer:
     extends:
@@ -120,12 +124,18 @@ services:
       service: stats
 
   user-ops-indexer:
+    # 迁移会引用主库 blocks 表，必须等 backend 完成 create_and_migrate
     depends_on:
-      - db
-      - backend
+      db:
+        condition: service_healthy
+      backend:
+        condition: service_started
     extends:
       file: ./services/user-ops-indexer.yml
       service: user-ops-indexer
+    networks:
+      - default
+      - chain_net
 
   proxy:
     depends_on:

@@ -217,23 +217,25 @@ sync_public_host_to_blockscout() {
 
   local tmp
   tmp="$(mktemp)"
+  # awk 函数内不能使用 next，故在规则里直接改写
   awk -v host="${host}" -v proto="${proto}" -v bind="${bind}" '
-    function set(k, v) { print k "=" v; seen[k]=1; next }
-    /^PUBLIC_HOST=/ { set("PUBLIC_HOST", host) }
-    /^BIND_ADDR=/ { set("BIND_ADDR", bind) }
-    /^NEXT_PUBLIC_API_HOST=/ { set("NEXT_PUBLIC_API_HOST", host) }
-    /^NEXT_PUBLIC_APP_HOST=/ { set("NEXT_PUBLIC_APP_HOST", host) }
-    /^NEXT_PUBLIC_API_PROTOCOL=/ { set("NEXT_PUBLIC_API_PROTOCOL", proto) }
-    /^NEXT_PUBLIC_APP_PROTOCOL=/ { set("NEXT_PUBLIC_APP_PROTOCOL", proto) }
-    /^NEXT_PUBLIC_STATS_API_HOST=/ { set("NEXT_PUBLIC_STATS_API_HOST", proto "://" host ":8080") }
-    /^NEXT_PUBLIC_VISUALIZE_API_HOST=/ { set("NEXT_PUBLIC_VISUALIZE_API_HOST", proto "://" host ":8081") }
-    /^NEXT_PUBLIC_NETWORK_RPC_URL=/ { set("NEXT_PUBLIC_NETWORK_RPC_URL", proto "://" host ":8575") }
+    /^PUBLIC_HOST=/ { print "PUBLIC_HOST=" host; seen["PUBLIC_HOST"]=1; next }
+    /^BIND_ADDR=/ { print "BIND_ADDR=" bind; seen["BIND_ADDR"]=1; next }
+    /^NEXT_PUBLIC_API_HOST=/ { print "NEXT_PUBLIC_API_HOST=" host; seen["NEXT_PUBLIC_API_HOST"]=1; next }
+    /^NEXT_PUBLIC_APP_HOST=/ { print "NEXT_PUBLIC_APP_HOST=" host; seen["NEXT_PUBLIC_APP_HOST"]=1; next }
+    /^NEXT_PUBLIC_API_PROTOCOL=/ { print "NEXT_PUBLIC_API_PROTOCOL=" proto; seen["NEXT_PUBLIC_API_PROTOCOL"]=1; next }
+    /^NEXT_PUBLIC_APP_PROTOCOL=/ { print "NEXT_PUBLIC_APP_PROTOCOL=" proto; seen["NEXT_PUBLIC_APP_PROTOCOL"]=1; next }
+    /^NEXT_PUBLIC_STATS_API_HOST=/ { print "NEXT_PUBLIC_STATS_API_HOST=" proto "://" host ":8080"; seen["NEXT_PUBLIC_STATS_API_HOST"]=1; next }
+    /^NEXT_PUBLIC_VISUALIZE_API_HOST=/ { print "NEXT_PUBLIC_VISUALIZE_API_HOST=" proto "://" host ":8081"; seen["NEXT_PUBLIC_VISUALIZE_API_HOST"]=1; next }
+    /^NEXT_PUBLIC_NETWORK_RPC_URL=/ { print "NEXT_PUBLIC_NETWORK_RPC_URL=" proto "://" host ":8575"; seen["NEXT_PUBLIC_NETWORK_RPC_URL"]=1; next }
     { print }
     END {
       if (!seen["PUBLIC_HOST"]) print "PUBLIC_HOST=" host
       if (!seen["BIND_ADDR"]) print "BIND_ADDR=" bind
       if (!seen["NEXT_PUBLIC_API_HOST"]) print "NEXT_PUBLIC_API_HOST=" host
       if (!seen["NEXT_PUBLIC_APP_HOST"]) print "NEXT_PUBLIC_APP_HOST=" host
+      if (!seen["NEXT_PUBLIC_API_PROTOCOL"]) print "NEXT_PUBLIC_API_PROTOCOL=" proto
+      if (!seen["NEXT_PUBLIC_APP_PROTOCOL"]) print "NEXT_PUBLIC_APP_PROTOCOL=" proto
       if (!seen["NEXT_PUBLIC_STATS_API_HOST"]) print "NEXT_PUBLIC_STATS_API_HOST=" proto "://" host ":8080"
       if (!seen["NEXT_PUBLIC_VISUALIZE_API_HOST"]) print "NEXT_PUBLIC_VISUALIZE_API_HOST=" proto "://" host ":8081"
       if (!seen["NEXT_PUBLIC_NETWORK_RPC_URL"]) print "NEXT_PUBLIC_NETWORK_RPC_URL=" proto "://" host ":8575"

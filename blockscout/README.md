@@ -3,7 +3,7 @@
 为本仓库本地测试链（Chain ID / Network ID = `100000`）提供区块浏览器。
 
 - 编排基于 [blockscout/blockscout](https://github.com/blockscout/blockscout) **`v11.2.5`** 的 `docker-compose`（`geth` 变体）
-- 使用 GHCR 预构建镜像（`ghcr.io/blockscout/*`，默认 `latest`，可在 `.env` 钉版本）
+- 使用 GHCR 预构建镜像（`ghcr.io/blockscout/*`，**已钉固定版本**，见 `.env.example`）
 - 建议对接 **archive 节点** RPC，并开启 `debug` API，以便内部交易 / trace 索引
 
 ## 前置条件
@@ -86,28 +86,33 @@ blockscout/
 | --- | --- |
 | `CHAIN_ID` | 默认 `100000` |
 | `RPC_HTTP_URL` / `RPC_TRACE_URL` / `RPC_WS_URL` | 指向本机节点 |
-| `DOCKER_TAG` / `FRONTEND_DOCKER_TAG` 等 | 钉住镜像版本 |
+| `BLOCKSCOUT_IMAGE` / `FRONTEND_IMAGE` | backend/frontend 完整镜像引用（含 digest） |
+| `STATS_DOCKER_TAG` 等 | 微服务 `vX.Y.Z` 标签 |
 | `NETWORK_NAME` / `COIN` / `COIN_NAME` | 前端展示名与代币符号 |
 
 更细的后端变量见 `envs/common-blockscout.env`，说明见 [Blockscout ENV docs](https://docs.blockscout.com/setup/env-variables)。
 
 ## 组件
 
-| 服务 | 镜像 |
+| 服务 | 固定版本 |
 | --- | --- |
-| backend | `ghcr.io/blockscout/blockscout` |
-| frontend | `ghcr.io/blockscout/frontend` |
+| backend / nft_media_handler | digest（OCI label `v9.0.2`） |
+| frontend | digest（OCI label `v2.3.5`） |
+| stats | `v2.17.0` |
+| visualizer | `v0.2.1` |
+| sig-provider | `v1.1.1` |
+| smart-contract-verifier | `v1.10.6` |
+| user-ops-indexer | `v1.4.3` |
 | db / stats-db | `postgres:17` |
-| redis | `redis:alpine` |
-| stats | `ghcr.io/blockscout/stats` |
-| visualizer | `ghcr.io/blockscout/visualizer` |
-| sig-provider | `ghcr.io/blockscout/sig-provider` |
-| smart-contract-verifier | `ghcr.io/blockscout/smart-contract-verifier` |
-| user-ops-indexer | `ghcr.io/blockscout/user-ops-indexer` |
-| proxy | `nginx` |
+| redis | `redis:7.4-alpine` |
+| proxy | `nginx:1.27.4-alpine` |
 
 ## 注意
 
 - 宿主机 **80 / 8080 / 8081** 端口需空闲
+- **Apple Silicon (arm64)**：`visualizer` / `sig-provider` 等仅有 `linux/amd64` 镜像。compose 已设 `platform: linux/amd64`（走 Rosetta/QEMU）。手动 pull 需加平台，例如：
+  ```bash
+  docker pull --platform linux/amd64 ghcr.io/blockscout/visualizer:v0.2.1
+  ```
 - 修改 Chain ID 或换创世后，应清空 DB 卷再索引：`docker compose down -v` 后重新 `./start.sh`
 - 仅用于本地/测试，勿直接暴露到公网
