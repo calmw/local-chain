@@ -20,7 +20,7 @@
 | HTTP / Trace | `http://archive_node:8545/` |
 | WS | `ws://archive_node:8546/` |
 
-**浏览器 / 外出访问**：在仓库根目录 `.env` 设置 `PUBLIC_HOST=<tailscale主机名>`，执行 `../start.sh` 会同步到本目录 `.env` 的 `NEXT_PUBLIC_*`。然后用 `http://<PUBLIC_HOST>/` 打开；钱包 RPC 用 `http://<PUBLIC_HOST>:8575`。
+**浏览器 / 外出访问**：在仓库根目录 `.env` 设置 `PUBLIC_HOST=<tailscale主机名>`，执行 `../start_node.sh` 会同步到本目录 `.env` 的 `NEXT_PUBLIC_*`。然后用 `http://<PUBLIC_HOST>/` 打开；钱包 RPC 用 `http://<PUBLIC_HOST>:8575`。
 
 Archive 启动时建议增加 debug：
 

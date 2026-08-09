@@ -14,7 +14,7 @@ usage() {
 选项:
   -h, --help   帮助
 
-等价于: ./stop.sh --blockscout-only
+等价于: ./stop_node.sh --blockscout-only
 EOF
 }
 
@@ -25,4 +25,4 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
-exec "${ROOT_DIR}/stop.sh" --blockscout-only
+exec "${ROOT_DIR}/stop_node.sh" --blockscout-only

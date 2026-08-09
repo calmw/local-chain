@@ -17,7 +17,7 @@ usage() {
 
 1) docker compose down 四个节点 + Blockscout
 2) 删除各节点 app/node 与 Blockscout 数据目录
-3) 调用 ./start.sh 重新拉起
+3) 调用 ./start_node.sh 重新拉起
 
 选项:
   -y, --yes         跳过确认
@@ -73,7 +73,7 @@ KEY_DIRS=(
 echo "=============================="
 echo "  local-chain FULL RESET"
 echo "=============================="
-echo "将: down 全部容器 → 清节点/浏览器数据 → $([ "${NO_START}" -eq 1 ] && echo '不重启' || echo './start.sh')"
+echo "将: down 全部容器 → 清节点/浏览器数据 → $([ "${NO_START}" -eq 1 ] && echo '不重启' || echo './start_node.sh')"
 echo "wipe keys: $([ "${WIPE_KEYS}" -eq 1 ] && echo yes || echo no)"
 [[ "${RESET_DRY_RUN}" -eq 1 ]] && echo "模式: dry-run"
 echo ""
@@ -86,10 +86,10 @@ reset_confirm "${confirm_msg}"
 log_down() { echo "==> $*"; }
 
 if [[ "${RESET_DRY_RUN}" -eq 1 ]]; then
-  log_down "[dry-run] ${ROOT_DIR}/stop.sh"
+  log_down "[dry-run] ${ROOT_DIR}/stop_node.sh"
 else
   log_down "停止节点与 Blockscout ..."
-  "${ROOT_DIR}/stop.sh" || true
+  "${ROOT_DIR}/stop_node.sh" || true
 fi
 
 # 2) wipe node + blockscout data
@@ -107,7 +107,7 @@ if [[ "${WIPE_KEYS}" -eq 1 ]]; then
   done
 fi
 
-# 清掉 start.sh 写回的 BOOTNODES，避免指向已失效公钥
+# 清掉 start_node.sh 写回的 BOOTNODES，避免指向已失效公钥
 if [[ -f "${ROOT_DIR}/.env" ]]; then
   if grep -q '^BOOTNODES=' "${ROOT_DIR}/.env"; then
     echo "==> 重置 .env 中 BOOTNODES="
@@ -124,15 +124,15 @@ fi
 # 3) restart
 if [[ "${NO_START}" -eq 1 ]]; then
   echo ""
-  echo "==> 已清库（--no-start）。需要时执行: ./start.sh"
+  echo "==> 已清库（--no-start）。需要时执行: ./start_node.sh"
   exit 0
 fi
 
 if [[ "${RESET_DRY_RUN}" -eq 1 ]]; then
-  echo "==> [dry-run] ${ROOT_DIR}/start.sh"
+  echo "==> [dry-run] ${ROOT_DIR}/start_node.sh"
   exit 0
 fi
 
 echo ""
 echo "==> 重新启动 ..."
-exec "${ROOT_DIR}/start.sh"
+exec "${ROOT_DIR}/start_node.sh"
