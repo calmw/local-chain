@@ -280,7 +280,7 @@ fi
 
 if [[ "${SKIP_STOP}" -eq 0 ]]; then
   log "先停止现有服务 ..."
-  "${ROOT_DIR}/stop_node.sh" --keep-network || true
+  "${ROOT_DIR}/stop.sh" --keep-network || true
 fi
 
 start_nodes
@@ -312,5 +312,5 @@ if [[ "${START_BLOCKSCOUT}" == "1" && "${NODES_ONLY}" -eq 0 ]]; then
   echo "    Blockscout      : http://${host}/"
 fi
 echo ""
-echo "提示: 外出访问请把根目录 .env 的 PUBLIC_HOST 设为 Tailscale MagicDNS 或 100.x，然后重新 ./start_node.sh"
+echo "提示: 外出访问请把根目录 .env 的 PUBLIC_HOST 设为 Tailscale MagicDNS 或 100.x，然后重新 ./start.sh"
 echo "提示: 验证者首次启动需向 VALIDATOR_ADDR 充值后完成 StakeHub 注册。"

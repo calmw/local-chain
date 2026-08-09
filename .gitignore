@@ -1,6 +1,11 @@
 .env
 .DS_Store
 
+# 离线镜像包（由 images.sh save/pack 生成）
+images/*.tar
+images/*.tar.gz
+images/*.ref
+
 # 仅忽略四节点运行时数据（保留 config、启动脚本等可提交）
 node_*/app/node/
 node_*/app/keys/

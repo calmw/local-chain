@@ -35,10 +35,16 @@ Docker 网络：`local-chain_net`（Blockscout backend 直连 `archive_node:8545
 cp -n .env.example .env
 # 编辑 .env：PASSWORD、CHAIN_IMAGE、PUBLIC_HOST（外出访问必填 Tailscale 主机名）
 
-# 2. 启停
-./start_node.sh                 # 重启 4 节点 + Blockscout
-./stop_node.sh                  # 全部停止
-./start_node.sh --nodes-only
+# 2. 镜像（可选：离线包在 images/）
+./images.sh list
+./images.sh pull           # 拉取项目镜像
+./images.sh save           # 打包到 images/*.tar
+./images.sh load           # 从 images/ 加载
+
+# 3. 启停（默认含 Blockscout）
+./start.sh                 # 重启 4 节点 + Blockscout
+./stop.sh                  # 全部停止
+./start.sh --nodes-only
 ./start_blockscout.sh      # 只启浏览器
 ./stop_blockscout.sh       # 只停浏览器
 ./reset_blockscout.sh -y   # 清浏览器索引并重启
@@ -71,7 +77,7 @@ curl -s -X POST http://127.0.0.1:8575 \
    PUBLIC_HOST=homeserver.tail-xxxx.ts.net   # 不要带 http://
    BIND_ADDR=0.0.0.0
    ```
-3. `./start_node.sh`（会把 `PUBLIC_HOST` 同步到 Blockscout 前端 `NEXT_PUBLIC_*`）
+3. `./start.sh`（会把 `PUBLIC_HOST` 同步到 Blockscout 前端 `NEXT_PUBLIC_*`）
 
 | 用途 | URL |
 | --- | --- |
@@ -91,7 +97,8 @@ MetaMask：Chain ID `100000`，RPC `http://<PUBLIC_HOST>:8575`，符号可按需
 local-chain/
 ├── README.md / docs/项目架构.md
 ├── .env.example / docker-compose.yaml
-├── start_node.sh / stop_node.sh / reset_node.sh   # 启停；全量清库并重启
+├── start.sh / stop.sh / reset.sh   # 启停（含 Blockscout）；全量清库并重启
+├── images.sh / images/             # 镜像拉取、打包、加载（离线包目录）
 ├── start_blockscout.sh / stop_blockscout.sh / reset_blockscout.sh
 ├── reset_archive.sh / reset_full.sh / reset_validator.sh
 ├── scripts/reset_lib.sh
@@ -128,11 +135,11 @@ local-chain/
 ./reset_blockscout.sh -y       # 清索引数据并重启（不动链）
 ./reset_blockscout.sh -y --no-start
 
-# 全量重置：down 节点+浏览器 → 删节点 app/node 与 Blockscout 数据 → start_node.sh
-./reset_node.sh -y
-./reset_node.sh -y --wipe-keys   # 连验证者密钥一起清
-./reset_node.sh -y --no-start    # 只清库不重启
-./reset_node.sh -n               # dry-run
+# 全量重置：down 节点+浏览器 → 删节点 app/node 与 Blockscout 数据 → start.sh
+./reset.sh -y
+./reset.sh -y --wipe-keys   # 连验证者密钥一起清
+./reset.sh -y --no-start    # 只清库不重启
+./reset.sh -n               # dry-run
 
 # 按角色清库（默认清仓库内 node_*/app/...；-y 跳过确认；-n dry-run）
 ./reset_archive.sh -y
@@ -150,7 +157,7 @@ local-chain/
 | `MINER_GAS_PRICE` | 出块 gas price（默认 20 Gwei） |
 | `PUBLIC_HOST` | 对外主机名（Tailscale / 局域网） |
 | `BIND_ADDR` | 端口绑定（默认 `0.0.0.0`） |
-| `BOOTNODES` | 由 `start_node.sh` 自动写入 |
+| `BOOTNODES` | 由 `start.sh` 自动写入 |
 
 ---
 
@@ -177,7 +184,7 @@ local-chain/
 向日志中的 `VALIDATOR_ADDR` 转 ≥ 2005 原生币，并确认 `RPC_URL` 可达。
 
 **外出打开 Blockscout 白屏 / API 打到 localhost？**  
-设置 `PUBLIC_HOST` 后重新 `./start_node.sh`（或 `--blockscout-only`）。
+设置 `PUBLIC_HOST` 后重新 `./start.sh`（或 `--blockscout-only`）。
 
 **改 chainId 后节点对不上？**  
 四节点 genesis / NetworkId / rpc_test / Blockscout 一并改，并清空 `app/node`（及按需密钥）后重启。
