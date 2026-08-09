@@ -54,7 +54,9 @@ curl -s -X POST http://127.0.0.1:8575 \
   -H 'Content-Type: application/json' \
   -d '{"jsonrpc":"2.0","id":1,"method":"eth_chainId","params":[]}'
 
-./rpc_test/rpc_test_testnet.sh 127.0.0.1 8575 8576
+./rpc_test.sh                  # 默认检测 full(8565) + archive(8575)
+./rpc_test.sh --full-only
+./rpc_test.sh --archive-only
 ```
 
 浏览器：本机 `http://127.0.0.1/`；外出见下文 Tailscale。
@@ -93,7 +95,7 @@ local-chain/
 ├── start_blockscout.sh / stop_blockscout.sh / reset_blockscout.sh
 ├── reset_archive.sh / reset_full.sh / reset_validator.sh
 ├── scripts/reset_lib.sh
-├── rpc_test/rpc_test_testnet.sh
+├── rpc_test.sh                 # full + archive RPC 健康检查
 ├── blockscout/                 # 浏览器（见 blockscout/README.md）
 ├── node_validator_1|2/         # 验证者
 ├── node_full/                  # 全节点
