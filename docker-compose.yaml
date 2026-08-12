@@ -53,6 +53,7 @@ services:
       HTTP_CORS_DOMAIN: "${HTTP_CORS_DOMAIN:-*}"
       HTTP_VHOSTS: "${HTTP_VHOSTS:-*}"
       WS_ORIGINS: "${WS_ORIGINS:-*}"
+      VERBOSITY: "${VERBOSITY:-4}"
     volumes:
       - ./node_validator_1/app:/data/app
     ports:
@@ -99,6 +100,7 @@ services:
       HTTP_CORS_DOMAIN: "${HTTP_CORS_DOMAIN:-*}"
       HTTP_VHOSTS: "${HTTP_VHOSTS:-*}"
       WS_ORIGINS: "${WS_ORIGINS:-*}"
+      VERBOSITY: "${VERBOSITY:-4}"
     volumes:
       - ./node_validator_2/app:/data/app
     ports:
@@ -140,6 +142,7 @@ services:
       HTTP_CORS_DOMAIN: "${HTTP_CORS_DOMAIN:-*}"
       HTTP_VHOSTS: "${HTTP_VHOSTS:-*}"
       WS_ORIGINS: "${WS_ORIGINS:-*}"
+      VERBOSITY: "${VERBOSITY:-4}"
     volumes:
       - ./node_full/app:/data/app
     ports:
@@ -181,6 +184,7 @@ services:
       HTTP_CORS_DOMAIN: "${HTTP_CORS_DOMAIN:-*}"
       HTTP_VHOSTS: "${HTTP_VHOSTS:-*}"
       WS_ORIGINS: "${WS_ORIGINS:-*}"
+      VERBOSITY: "${VERBOSITY:-4}"
     volumes:
       - ./node_archive/app:/data/app
     ports:

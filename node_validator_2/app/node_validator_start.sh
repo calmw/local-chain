@@ -21,6 +21,8 @@ PPROF_PORT=${PPROF_PORT:-7060}
 P2P_PORT=${P2P_PORT:-30303}
 STAKE_AMOUNT=${STAKE_AMOUNT:-2001}
 BOOTNODES=${BOOTNODES:-""}
+# geth 日志级别：0=silent 1=error 2=warn 3=info 4=debug 5=detail（开发链默认 debug）
+VERBOSITY=${VERBOSITY:-4}
 
 # 显式设置 RPC gas cap，避免 config.toml 的 RPCGasCap=0 触发 eth_createAccessList 异常
 RPC_GAS_CAP=${RPC_GAS_CAP:-50000000}
@@ -162,6 +164,7 @@ run_geth_exec() {
     --override.lorentz 0 \
     --override.maxwell 0 \
     --ipcpath "${IPC_PATH}" \
+    --verbosity "${VERBOSITY}" \
     --log.rotate \
     --log.maxsize 100 \
     --log.maxage 7 \
@@ -363,6 +366,7 @@ else
         --override.lorentz 0 \
         --override.maxwell 0 \
         --ipcpath "${IPC_PATH}" \
+        --verbosity "${VERBOSITY}" \
         --log.format terminal \
         --log.rotate \
         --log.maxsize 100 \
@@ -393,6 +397,7 @@ else
         --override.lorentz 0 \
         --override.maxwell 0 \
         --ipcpath "${IPC_PATH}" \
+        --verbosity "${VERBOSITY}" \
         --log.format terminal \
         --log.rotate \
         --log.maxsize 100 \

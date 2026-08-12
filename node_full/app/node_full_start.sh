@@ -29,6 +29,8 @@ PPROF_ADDR=${PPROF_ADDR:-127.0.0.1}      # 安全：pprof 不暴露公网，避�
 WS_ORIGINS=${WS_ORIGINS:-"*"}
 # Full 节点状态读多，建议较大缓存
 CACHE_MB=${CACHE_MB:-4096}
+# geth 日志级别：0=silent 1=error 2=warn 3=info 4=debug 5=detail（开发链默认 debug）
+VERBOSITY=${VERBOSITY:-4}
 
 datadir_has_rialto() {
   [ -f "${DATA_DIR}/init.log" ] || return 1
@@ -143,6 +145,7 @@ exec "$BIN_DIR/geth" \
     --syncmode "${SYNC_MODE}" \
     --gcmode "${GC_MODE}" \
     --db.engine "${DB_ENGINE}" \
+    --verbosity "${VERBOSITY}" \
     --log.rotate --log.maxsize 100 --log.maxage 7 \
     --log.format terminal
 
