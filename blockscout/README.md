@@ -5,6 +5,7 @@
 - 编排基于 [blockscout/blockscout](https://github.com/blockscout/blockscout) **`v11.2.5`** 的 `docker-compose`（`geth` 变体）
 - 使用 GHCR 预构建镜像（`ghcr.io/blockscout/*`，**已钉固定版本**，见 `.env.example`）
 - 建议对接 **archive 节点** RPC，并开启 `debug` API，以便内部交易 / trace 索引
+- Docker：业务网 `bot-local-chain-bs_net`（`172.30.89.0/24`），链网 external `bot-local-chain_net`；容器名带 `lcbs-` 前缀
 
 ## 前置条件
 

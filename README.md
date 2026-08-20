@@ -22,9 +22,9 @@
 | 验证者 2 | `validator_2` | `8555` / `8556` / `30304` | 第二验证者 |
 | 全节点 | `full_node` | `8565` / `8566` / `30305` | 业务 RPC（`gcmode=full`） |
 | 归档节点 | `archive_node` | `8575` / `8576` / `30306` | 历史状态 / Blockscout / debug |
-| Blockscout | `proxy` 等 | `80` / `8080` / `8081` | 区块浏览器 |
+| Blockscout | `lcbs-proxy` 等 | `80` / `8080` / `8081` | 区块浏览器 |
 
-Docker 网络：`local-chain_net`（Blockscout backend 直连 `archive_node:8545`）。
+Docker 网络：链 `bot-local-chain_net`（`172.30.88.0/24`）；浏览器业务网 `bot-local-chain-bs_net`（`172.30.89.0/24`）。Blockscout backend 经链网直连 `archive_node:8545`。
 
 ---
 

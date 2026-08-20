@@ -6,6 +6,6 @@ services:
     pull_policy: missing
     platform: linux/amd64
     restart: always
-    container_name: 'visualizer'
+    container_name: 'lcbs-visualizer'
     env_file:
       -  ../envs/common-visualizer.env

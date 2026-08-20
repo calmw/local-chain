@@ -18,7 +18,7 @@ usage() {
 选项:
   --nodes-only      只停链节点
   --blockscout-only 只停 Blockscout
-  --keep-network    不停/不删 local-chain_net（供 start.sh 重启时复用）
+  --keep-network    不停/不删 bot-local-chain_net（供 start.sh 重启时复用）
   -h, --help        帮助
 EOF
 }

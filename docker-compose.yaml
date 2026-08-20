@@ -1,22 +1,22 @@
 # local-chain: 2 validators + full + archive
-# 网络: local-chain_net（固定内网 IP，供 P2P / Blockscout）
+# 网络: bot-local-chain_net（固定内网 IP，供 P2P / Blockscout；避开常用 172.28.0.0/24）
 # 各节点挂载各自 node_*/app → /data/app
 #
 # 内网地址规划（默认）:
-#   172.28.0.11  validator_1  (bootnode)
-#   172.28.0.12  validator_2
-#   172.28.0.13  full_node
-#   172.28.0.14  archive_node
+#   172.30.88.11  validator_1  (bootnode)
+#   172.30.88.12  validator_2
+#   172.30.88.13  full_node
+#   172.30.88.14  archive_node
 name: local-chain
 
 networks:
   chain_net:
-    name: local-chain_net
+    name: ${CHAIN_NETWORK:-bot-local-chain_net}
     driver: bridge
     ipam:
       config:
-        - subnet: ${CHAIN_SUBNET:-172.28.0.0/24}
-          gateway: ${CHAIN_GATEWAY:-172.28.0.1}
+        - subnet: ${CHAIN_SUBNET:-172.30.88.0/24}
+          gateway: ${CHAIN_GATEWAY:-172.30.88.1}
 
 services:
   validator_1:
@@ -25,7 +25,7 @@ services:
     restart: unless-stopped
     networks:
       chain_net:
-        ipv4_address: ${IP_VALIDATOR_1:-172.28.0.11}
+        ipv4_address: ${IP_VALIDATOR_1:-172.30.88.11}
     environment:
       BASE_DIR: "/data/app"
       DATA_DIR: "/data/app/node"
@@ -69,7 +69,7 @@ services:
     restart: unless-stopped
     networks:
       chain_net:
-        ipv4_address: ${IP_VALIDATOR_2:-172.28.0.12}
+        ipv4_address: ${IP_VALIDATOR_2:-172.30.88.12}
     depends_on:
       - validator_1
     environment:
@@ -116,7 +116,7 @@ services:
     restart: unless-stopped
     networks:
       chain_net:
-        ipv4_address: ${IP_FULL:-172.28.0.13}
+        ipv4_address: ${IP_FULL:-172.30.88.13}
     depends_on:
       - validator_1
     environment:
@@ -158,7 +158,7 @@ services:
     restart: unless-stopped
     networks:
       chain_net:
-        ipv4_address: ${IP_ARCHIVE:-172.28.0.14}
+        ipv4_address: ${IP_ARCHIVE:-172.30.88.14}
     depends_on:
       - validator_1
     environment:

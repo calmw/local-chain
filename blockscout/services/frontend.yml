@@ -7,6 +7,6 @@ services:
     pull_policy: missing
     platform: linux/amd64
     restart: always
-    container_name: 'frontend'
+    container_name: 'lcbs-frontend'
     env_file:
       -  ../envs/common-frontend.env

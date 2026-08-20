@@ -3,7 +3,7 @@ version: '3.9'
 services:
   proxy:
     image: nginx:1.27.4-alpine
-    container_name: proxy
+    container_name: 'lcbs-proxy'
     extra_hosts:
       - 'host.docker.internal:host-gateway'
     environment:

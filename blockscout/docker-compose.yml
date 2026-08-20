@@ -1,14 +1,23 @@
 # Blockscout for local-chain (Parlia / geth)
 # Based on blockscout/blockscout docker-compose @ v11.2.5 (geth.yml + local overrides)
 # Images: ghcr.io/blockscout/* (prebuilt, no source build)
+#
+# 业务网 bot-local-chain-bs_net（固定子网，避免与其它 compose 的 default/172.20 冲突）
+# 链网   bot-local-chain_net（external，连 archive_node）
 
-name: local-chain-blockscout
+name: bot-local-chain-bs
 
 networks:
   default:
+    name: ${BLOCKSCOUT_NETWORK:-bot-local-chain-bs_net}
+    driver: bridge
+    ipam:
+      config:
+        - subnet: ${BLOCKSCOUT_SUBNET:-172.30.89.0/24}
+          gateway: ${BLOCKSCOUT_GATEWAY:-172.30.89.1}
   chain_net:
     external: true
-    name: local-chain_net
+    name: ${CHAIN_NETWORK:-bot-local-chain_net}
 
 services:
   redis-db:

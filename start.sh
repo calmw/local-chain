@@ -98,15 +98,16 @@ wait_rpc() {
   done
 }
 
-# 固定内网 IP（与 docker-compose / .env 一致）；变更子网时需重建 local-chain_net
-IP_VALIDATOR_1="${IP_VALIDATOR_1:-172.28.0.11}"
-IP_VALIDATOR_2="${IP_VALIDATOR_2:-172.28.0.12}"
-IP_FULL="${IP_FULL:-172.28.0.13}"
-IP_ARCHIVE="${IP_ARCHIVE:-172.28.0.14}"
-CHAIN_SUBNET="${CHAIN_SUBNET:-172.28.0.0/24}"
+# 固定内网 IP（与 docker-compose / .env 一致）；变更子网/网名时需重建网络
+CHAIN_NETWORK="${CHAIN_NETWORK:-bot-local-chain_net}"
+IP_VALIDATOR_1="${IP_VALIDATOR_1:-172.30.88.11}"
+IP_VALIDATOR_2="${IP_VALIDATOR_2:-172.30.88.12}"
+IP_FULL="${IP_FULL:-172.30.88.13}"
+IP_ARCHIVE="${IP_ARCHIVE:-172.30.88.14}"
+CHAIN_SUBNET="${CHAIN_SUBNET:-172.30.88.0/24}"
 
 ensure_chain_net() {
-  local net="local-chain_net" current=""
+  local net="${CHAIN_NETWORK}" current=""
   if ! docker network inspect "${net}" >/dev/null 2>&1; then
     return 0
   fi
@@ -123,6 +124,36 @@ ensure_chain_net() {
   fi
 }
 
+# stop --keep-network 后若网络被重建，旧容器仍记着失效 NetworkID，up 会报 network ... not found
+purge_stale_chain_containers() {
+  local net="${CHAIN_NETWORK}" want_id="" name got
+  want_id="$(docker network inspect -f '{{.Id}}' "${net}" 2>/dev/null | tr -d '\r\n' || true)"
+  for name in validator_1 validator_2 full_node archive_node; do
+    docker inspect "${name}" >/dev/null 2>&1 || continue
+    got="$(docker inspect -f "{{with index .NetworkSettings.Networks \"${net}\"}}{{.NetworkID}}{{end}}" "${name}" 2>/dev/null | tr -d '\r\n' || true)"
+    # 仍挂在旧网名 local-chain_net 上也视为过期
+    if [[ -z "${got}" ]]; then
+      got="$(docker inspect -f '{{with index .NetworkSettings.Networks "local-chain_net"}}{{.NetworkID}}{{end}}' "${name}" 2>/dev/null | tr -d '\r\n' || true)"
+      if [[ -n "${got}" ]]; then
+        log "容器 ${name} 仍在旧网络 local-chain_net，移除以便迁到 ${net}"
+        docker rm -f "${name}" >/dev/null 2>&1 || true
+        continue
+      fi
+    fi
+    if [[ -z "${want_id}" ]]; then
+      if [[ -n "${got}" ]]; then
+        log "网络 ${net} 已不存在，移除残留容器 ${name}"
+        docker rm -f "${name}" >/dev/null 2>&1 || true
+      fi
+      continue
+    fi
+    if [[ -n "${got}" && "${got}" != "${want_id}" ]]; then
+      log "容器 ${name} 挂在旧网络 ${got:0:12}…，移除以便挂到当前 ${net}"
+      docker rm -f "${name}" >/dev/null 2>&1 || true
+    fi
+  done
+}
+
 resolve_bootnodes() {
   local nodekey="${ROOT_DIR}/node_validator_1/app/keys/nodekey"
   local pubkey="" ip="${IP_VALIDATOR_1}"
@@ -131,7 +162,7 @@ resolve_bootnodes() {
 
   # 优先用 compose 固定 IP；校验容器实际地址是否一致
   local actual
-  actual="$(docker inspect -f '{{(index .NetworkSettings.Networks "local-chain_net").IPAddress}}' validator_1 2>/dev/null | tr -d '\r\n' || true)"
+  actual="$(docker inspect -f "{{(index .NetworkSettings.Networks \"${CHAIN_NETWORK}\").IPAddress}}" validator_1 2>/dev/null | tr -d '\r\n' || true)"
   if [[ -n "${actual}" && "${actual}" != "${ip}" ]]; then
     log "警告: validator_1 实际 IP=${actual}，与配置 IP_VALIDATOR_1=${ip} 不一致，改用实际 IP"
     ip="${actual}"
@@ -179,6 +210,7 @@ start_nodes() {
     "${ROOT_DIR}/node_archive/app/node"
 
   ensure_chain_net
+  purge_stale_chain_containers
 
   log "启动 validator_1 ..."
   compose_chain up -d validator_1
@@ -260,13 +292,35 @@ start_blockscout() {
   sync_public_host_to_blockscout
 
   # 确保链网络存在，供 Blockscout backend 直连 archive_node
-  docker network inspect local-chain_net >/dev/null 2>&1 || compose_chain up -d --no-start validator_1
+  docker network inspect "${CHAIN_NETWORK}" >/dev/null 2>&1 || compose_chain up -d --no-start validator_1
 
   log "重启 Blockscout ..."
   (
     cd "${bs_dir}"
     mkdir -p services/logs services/dets services/blockscout-db-data services/stats-db-data
+    # 同步网名到 blockscout/.env（chain external + 业务网固定子网）
+    upsert_bs_env_var() {
+      local key="$1" val="$2" tmp
+      if ! grep -q "^${key}=" .env 2>/dev/null; then
+        echo "${key}=${val}" >> .env
+      else
+        tmp="$(mktemp)"
+        awk -v k="${key}" -v v="${val}" 'BEGIN{done=0} index($0,k"=")==1{print k"="v; done=1; next} {print} END{if(!done) print k"="v}' .env >"${tmp}"
+        mv "${tmp}" .env
+      fi
+    }
+    upsert_bs_env_var CHAIN_NETWORK "${CHAIN_NETWORK}"
+    upsert_bs_env_var BLOCKSCOUT_NETWORK "${BLOCKSCOUT_NETWORK:-bot-local-chain-bs_net}"
+    upsert_bs_env_var BLOCKSCOUT_SUBNET "${BLOCKSCOUT_SUBNET:-172.30.89.0/24}"
+    upsert_bs_env_var BLOCKSCOUT_GATEWAY "${BLOCKSCOUT_GATEWAY:-172.30.89.1}"
     docker compose --env-file .env down --remove-orphans >/dev/null 2>&1 || true
+    # 旧 compose 项目名 / 通用容器名残留清理（改名前的 backend、db、proxy 等）
+    docker compose -p local-chain-blockscout --env-file .env down --remove-orphans >/dev/null 2>&1 || true
+    local old
+    for old in backend frontend proxy db redis-db stats stats-db visualizer sig-provider smart-contract-verifier user-ops-indexer nft_media_handler; do
+      docker rm -f "${old}" >/dev/null 2>&1 || true
+    done
+    docker network rm local-chain-blockscout_default >/dev/null 2>&1 || true
     docker compose --env-file .env up -d --pull missing
   )
   log "Explorer: http://${host}/"
